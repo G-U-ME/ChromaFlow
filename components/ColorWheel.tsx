@@ -21,11 +21,12 @@ const ColorWheel: React.FC<ColorWheelProps> = ({
     // ---------------- Constants ----------------
     const R_RING_MIN = 60;
     const R_RING_MAX = 90;
-    const WHEEL_SIZE = 240; // Reduced size since outer ring is gone
+    const WHEEL_SIZE = 240; 
 
     // ---------------- State ----------------
     const [isDragging, setIsDragging] = useState(false);
-    const [tolerance, setTolerance] = useState(5); // The 'step' between adjacent hues
+    const [tolerance, setTolerance] = useState(5); 
+    const [showDensity, setShowDensity] = useState(false);
     
     const svgRef = useRef<SVGSVGElement>(null);
     const centerRef = useRef<{x: number, y: number}>({x: 0, y: 0});
@@ -33,7 +34,7 @@ const ColorWheel: React.FC<ColorWheelProps> = ({
 
     // Limits for tolerance
     const MIN_TOLERANCE = 1;
-    const MAX_TOLERANCE = 15;
+    const MAX_TOLERANCE = 365;
 
     // ---------------- Helpers ----------------
     const getAngle = (clientX: number, clientY: number) => {
@@ -66,6 +67,16 @@ const ColorWheel: React.FC<ColorWheelProps> = ({
         return () => window.removeEventListener('resize', updateCenter);
     }, [isOpen]);
 
+    useEffect(() => {
+        if (isOpen) {
+            setShowDensity(true);
+            const timer = setTimeout(() => setShowDensity(false), 3000);
+            return () => clearTimeout(timer);
+        } else {
+            setShowDensity(false);
+        }
+    }, [tolerance, isOpen]);
+
     // ---------------- Wheel Interaction ----------------
 
     const handlePointerDown = (e: React.PointerEvent) => {
@@ -93,8 +104,6 @@ const ColorWheel: React.FC<ColorWheelProps> = ({
 
     const handleStripWheel = (e: React.WheelEvent) => {
         e.stopPropagation();
-        // Scroll Up (negative delta) -> Smaller Tolerance (Finer)
-        // Scroll Down (positive delta) -> Larger Tolerance (Coarser)
         const delta = Math.sign(e.deltaY); 
         setTolerance(prev => {
             const next = prev + delta;
@@ -103,7 +112,6 @@ const ColorWheel: React.FC<ColorWheelProps> = ({
     };
 
     const handleHueClick = (offsetIndex: number) => {
-        // "Teleport" behavior: The clicked hue becomes the new center
         const diff = offsetIndex * tolerance;
         const newHue = (currentHue + diff + 360) % 360;
         setHue(newHue);
@@ -120,9 +128,7 @@ const ColorWheel: React.FC<ColorWheelProps> = ({
         rounded-2xl flex items-center justify-center font-mono text-sm
     `;
 
-    // Generate the 7 hue values for the strip
     const hueStripItems = useMemo(() => {
-        // offsets: -3, -2, -1, 0, 1, 2, 3
         return Array.from({ length: 7 }).map((_, i) => {
             const offset = i - 3;
             const h = (currentHue + (offset * tolerance) + 360) % 360;
@@ -132,11 +138,14 @@ const ColorWheel: React.FC<ColorWheelProps> = ({
 
     return (
         <div 
-            className={`flex flex-col items-center gap-4 transition-opacity duration-300 ease-out ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
-            style={{ width: WHEEL_SIZE, position: 'relative' }}
+            className={`relative pointer-events-none transition-opacity duration-300 ease-out ${isOpen ? 'opacity-100' : 'opacity-0'}`}
+            style={{ width: 0, height: 0 }}
         >
-            {/* 1. MAIN COLOR RING */}
-            <div style={{ width: WHEEL_SIZE, height: WHEEL_SIZE, flexShrink: 0 }}>
+            {/* 1. MAIN COLOR RING (Centered) */}
+            <div 
+                className="absolute top-0 left-0 -translate-x-1/2 -translate-y-1/2"
+                style={{ width: WHEEL_SIZE, height: WHEEL_SIZE }}
+            >
                 <svg 
                     ref={svgRef}
                     width="100%" 
@@ -150,7 +159,6 @@ const ColorWheel: React.FC<ColorWheelProps> = ({
                         onPointerUp={handlePointerUp}
                         className="cursor-pointer pointer-events-auto"
                     >
-                        {/* Spectrum Gradient Ring */}
                         <foreignObject 
                             x={-R_RING_MAX} 
                             y={-R_RING_MAX} 
@@ -170,15 +178,13 @@ const ColorWheel: React.FC<ColorWheelProps> = ({
                             />
                         </foreignObject>
                         
-                        {/* Hit Area */}
                         <path 
                             d={describeArc(0, 0, R_RING_MIN, R_RING_MAX, 0, 359.99)}
                             fill="transparent"
                         />
 
-                        {/* Secondary Pointers (The 6 surrounding hues) */}
                         {hueStripItems.map((item) => {
-                            if (item.offset === 0) return null; // Skip center
+                            if (item.offset === 0) return null;
                             return (
                                 <g key={item.offset} transform={`rotate(${item.h})`} className="transition-transform duration-75">
                                     <circle 
@@ -192,7 +198,6 @@ const ColorWheel: React.FC<ColorWheelProps> = ({
                             );
                         })}
 
-                        {/* Main Pointer (Center) */}
                         <g transform={`rotate(${currentHue})`}>
                             <circle 
                                 cx="0" cy={-(R_RING_MIN + R_RING_MAX)/2} 
@@ -213,11 +218,10 @@ const ColorWheel: React.FC<ColorWheelProps> = ({
                 </svg>
             </div>
 
-            {/* 2. HUE STRIP (Adjacent Hues) */}
-            {/* "Coarse-grained hue selector list" as described in prompt */}
+            {/* 2. HUE STRIP (Vertical, Right) */}
             <div 
                 ref={stripRef}
-                className={`w-full h-12 rounded-full px-2 flex items-center justify-between ${glassCapsuleClass} pointer-events-auto cursor-ns-resize`}
+                className={`absolute top-0 left-[120px] -translate-y-1/2 h-[220px] w-12 rounded-full py-2 flex flex-col items-center justify-between ${glassCapsuleClass} pointer-events-auto cursor-ns-resize`}
                 onWheel={handleStripWheel}
                 title="Scroll to adjust density"
             >
@@ -248,50 +252,20 @@ const ColorWheel: React.FC<ColorWheelProps> = ({
                 })}
             </div>
 
-            {/* 3. DENSITY BAR */}
-            {/* Shows "Density" (High Density = Small Tolerance). Length = Max - Current */}
-            <div className="w-full px-4 pointer-events-auto">
-                <div className="flex items-center gap-3">
-                    <span className="text-[10px] font-bold opacity-40 select-none">DENSITY</span>
-                    <div className="relative flex-1 h-6 flex items-center group">
-                        {/* Visual track */}
-                        <div className="absolute inset-x-0 h-1 bg-current opacity-10 rounded-full"></div>
-                        
-                        {/* Interactive Range Input (Hidden but clickable) */}
-                        <input 
-                            type="range" 
-                            min={MIN_TOLERANCE} 
-                            max={MAX_TOLERANCE} 
-                            step="1"
-                            value={MAX_TOLERANCE - tolerance + MIN_TOLERANCE} // Invert: High val = High density (Low tolerance)
-                            onChange={(e) => {
-                                const val = parseInt(e.target.value);
-                                setTolerance(MAX_TOLERANCE - val + MIN_TOLERANCE);
-                            }}
-                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
-                        />
-
-                        {/* Visual Bar */}
-                        <div 
-                            className="h-1 bg-indigo-500 rounded-full relative z-10 pointer-events-none transition-all duration-100"
-                            style={{ 
-                                width: `${((MAX_TOLERANCE - tolerance) / (MAX_TOLERANCE - MIN_TOLERANCE)) * 100}%` 
-                            }}
-                        />
-                        
-                        {/* Knob */}
-                        <div 
-                            className="absolute w-3 h-3 bg-white shadow rounded-full z-10 pointer-events-none transition-all duration-100 ml-[-6px]"
-                            style={{ 
-                                left: `${((MAX_TOLERANCE - tolerance) / (MAX_TOLERANCE - MIN_TOLERANCE)) * 100}%` 
-                            }}
-                        />
-                    </div>
+            {/* 3. DENSITY BAR (Vertical, Right of Strip, Transient) */}
+            <div 
+                className={`absolute top-0 left-[176px] -translate-y-1/2 h-[220px] flex items-center transition-opacity duration-500 pointer-events-none ${showDensity ? 'opacity-100' : 'opacity-0'}`}
+            >
+                 <div className={`w-1.5 h-full rounded-full overflow-hidden relative ${isDark ? 'bg-white/20' : 'bg-black/10'}`}>
+                    <div 
+                        className="absolute bottom-0 left-0 w-full bg-indigo-500 rounded-full transition-all duration-200"
+                        style={{ height: `${((MAX_TOLERANCE - tolerance) / (MAX_TOLERANCE - MIN_TOLERANCE)) * 100}%` }}
+                    />
                 </div>
             </div>
 
-            {/* 4. COLOR CODE CAPSULE */}
-            <div className={`px-4 py-2 mt-[-4px] ${glassCapsuleClass}`}>
+            {/* 4. COLOR CODE CAPSULE (Bottom) */}
+            <div className={`absolute top-[120px] left-0 -translate-x-1/2 px-4 py-2 pointer-events-auto ${glassCapsuleClass}`}>
                 <span className="font-bold opacity-60">H {Math.round(currentHue)}°</span>
                 <span className="w-px h-4 bg-current opacity-20 mx-3"></span>
                 <span className="font-bold select-all min-w-[80px] text-center">

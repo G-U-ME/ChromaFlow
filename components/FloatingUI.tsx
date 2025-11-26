@@ -47,14 +47,6 @@ const FloatingUI: React.FC<FloatingUIProps> = ({
     return (
         <div className="absolute inset-0 pointer-events-none z-40 overflow-hidden font-sans">
             
-            {/* Click-outside layer to close wheel */}
-            {wheelOpen && (
-                <div 
-                    className="fixed inset-0 bg-transparent pointer-events-auto"
-                    onClick={() => setWheelOpen(false)}
-                />
-            )}
-
             {/* Tolerance/Density Indicator (Top Center - Minimalist) */}
             <div 
                 className={`absolute top-6 left-1/2 -translate-x-1/2 transition-all duration-500 ease-out ${toleranceData.visible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}
