@@ -239,8 +239,21 @@ const GridCanvas: React.FC<GridCanvasProps> = ({
     const worldCx = (cx - viewState.x) / viewState.scale;
     const worldCy = (cy - viewState.y) / viewState.scale;
     
-    const newX = cx - worldCx * newScale;
-    const newY = cy - worldCy * newScale;
+    // Calculate ratio based on maxIndex (period) change
+    // The grid generation logic uses floor(100/step) which introduces non-linearity
+    // We must match that exact ratio to keep the phase (color) consistent
+    const oldMaxIndex = Math.floor(100 / viewState.step);
+    const newMaxIndex = Math.floor(100 / newStep);
+    
+    const stepRatio = (oldMaxIndex > 0 && newMaxIndex > 0) 
+        ? newMaxIndex / oldMaxIndex 
+        : 1;
+
+    const targetWorldCx = worldCx * stepRatio;
+    const targetWorldCy = worldCy * stepRatio;
+
+    const newX = cx - targetWorldCx * newScale;
+    const newY = cy - targetWorldCy * newScale;
 
     setViewState({
         x: newX,
