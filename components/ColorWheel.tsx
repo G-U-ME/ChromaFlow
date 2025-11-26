@@ -265,10 +265,10 @@ const ColorWheel: React.FC<ColorWheelProps> = ({
             </div>
 
             {/* 4. COLOR CODE CAPSULE (Bottom) */}
-            <div className={`absolute top-[120px] left-0 -translate-x-1/2 px-4 py-2 pointer-events-auto ${glassCapsuleClass}`}>
+            <div className={`absolute top-[120px] left-0 -translate-x-1/2 px-4 py-2 pointer-events-auto whitespace-nowrap ${glassCapsuleClass}`}>
                 <span className="font-bold opacity-60">H {Math.round(currentHue)}°</span>
                 <span className="w-px h-4 bg-current opacity-20 mx-3"></span>
-                <span className="font-bold select-all min-w-[80px] text-center">
+                <span className="font-bold select-all text-center">
                     {formatColor({ h: currentHue, s: 100, l: 50 }, colorFormat)}
                 </span>
             </div>

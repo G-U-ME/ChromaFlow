@@ -39,7 +39,7 @@ const FloatingUI: React.FC<FloatingUIProps> = ({
     `;
 
     const iconButtonClass = `
-        w-10 h-10 flex items-center justify-center rounded-full
+        w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-full
         hover:bg-current hover:bg-opacity-10 
         active:scale-90 transition-transform cursor-pointer select-none
     `;
@@ -49,9 +49,9 @@ const FloatingUI: React.FC<FloatingUIProps> = ({
             
             {/* Tolerance/Density Indicator (Top Center - Minimalist) */}
             <div 
-                className={`absolute top-6 left-1/2 -translate-x-1/2 transition-all duration-500 ease-out ${toleranceData.visible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}
+                className={`absolute top-4 sm:top-6 left-1/2 -translate-x-1/2 transition-all duration-500 ease-out ${toleranceData.visible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}
             >
-                <div className={`px-4 py-2 rounded-full text-xs font-bold tracking-widest flex items-center gap-3 ${glassPanelClass}`}>
+                <div className={`px-3 py-1 sm:px-4 sm:py-2 rounded-full text-xs font-bold tracking-widest flex items-center gap-3 ${glassPanelClass}`}>
                     <span className="opacity-60">DENSITY</span>
                     <div className="w-24 h-1 bg-current opacity-20 rounded-full overflow-hidden relative">
                         <div 
@@ -65,19 +65,12 @@ const FloatingUI: React.FC<FloatingUIProps> = ({
             {/* EXPANDABLE COLOR CONTROLLER */}
             {/* This container anchors the entire color tool interaction */}
             <div 
-                className="absolute transition-all duration-500 cubic-bezier(0.34, 1.56, 0.64, 1) pointer-events-auto"
-                style={{
-                    // Initial position: top-6 (24px), left-6 (24px)
-                    // Expanded position: shift out by 100px (reduced from 130px) to better fit the smaller wheel
-                    top: '24px',
-                    left: '24px',
-                    transform: wheelOpen ? 'translate(100px, 100px)' : 'translate(0, 0)',
-                    zIndex: 50
-                }}
+                className={`absolute top-4 left-4 sm:top-6 sm:left-6 transition-all duration-500 cubic-bezier(0.34, 1.56, 0.64, 1) pointer-events-auto z-50
+                            ${wheelOpen ? 'translate-x-[80px] translate-y-[80px] sm:translate-x-[100px] sm:translate-y-[100px]' : 'translate-x-0 translate-y-0'}`}
             >
                 {/* 1. The Color Wheel Component (Rendered centered on this anchor) */}
                 {/* We pass a custom style to center it absolutely relative to this div */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none flex justify-center items-center">
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none flex justify-center items-center transform scale-75 sm:scale-100 origin-center">
                     <ColorWheel 
                         isOpen={wheelOpen} 
                         currentHue={currentHue}
@@ -93,7 +86,7 @@ const FloatingUI: React.FC<FloatingUIProps> = ({
                     onClick={() => setWheelOpen(!wheelOpen)}
                 >
                     <div 
-                        className={`relative w-12 h-12 rounded-full border-[3px] shadow-lg cursor-pointer transition-transform duration-300 hover:scale-105 active:scale-95 ${isDark ? 'border-[#333]' : 'border-white'}`}
+                        className={`relative w-10 h-10 sm:w-12 sm:h-12 rounded-full border-[3px] shadow-lg cursor-pointer transition-transform duration-300 hover:scale-105 active:scale-95 ${isDark ? 'border-[#333]' : 'border-white'}`}
                         style={{ backgroundColor: `hsl(${currentHue}, 100%, 50%)` }}
                     >
                         {/* Inner highlight ring for depth */}
@@ -103,7 +96,7 @@ const FloatingUI: React.FC<FloatingUIProps> = ({
             </div>
 
             {/* Top Right: Unified Control Island */}
-            <div className={`absolute top-6 right-6 flex items-center p-1.5 rounded-full pointer-events-auto ${glassPanelClass}`}>
+            <div className={`absolute top-4 right-4 sm:top-6 sm:right-6 flex items-center p-1 sm:p-1.5 rounded-full pointer-events-auto ${glassPanelClass}`}>
                 
                 {/* Theme Toggle */}
                 <button 
