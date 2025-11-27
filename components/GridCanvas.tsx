@@ -152,7 +152,7 @@ const GridCanvas: React.FC<GridCanvasProps> = ({
     } else if (pointers.current.size === 2) {
         // Pinch Start
         setIsDraggingCanvas(false); // Disable panning during pinch to avoid conflict
-        const pts = Array.from(pointers.current.values());
+        const pts = Array.from(pointers.current.values()) as { x: number; y: number }[];
         lastPinchDist.current = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
     }
   };
@@ -162,7 +162,7 @@ const GridCanvas: React.FC<GridCanvasProps> = ({
 
     // PINCH ZOOM
     if (pointers.current.size === 2) {
-        const pts = Array.from(pointers.current.values());
+        const pts = Array.from(pointers.current.values()) as { x: number; y: number }[];
         const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
         const cx = (pts[0].x + pts[1].x) / 2;
         const cy = (pts[0].y + pts[1].y) / 2;
@@ -210,7 +210,7 @@ const GridCanvas: React.FC<GridCanvasProps> = ({
     } else if (pointers.current.size === 1) {
         // Switched from pinch to single finger?
         // Resume panning from current point to prevent jump
-        const p = pointers.current.values().next().value;
+        const p = pointers.current.values().next().value as { x: number; y: number };
         lastPos.current = { x: p.x, y: p.y };
         setIsDraggingCanvas(true);
     }
