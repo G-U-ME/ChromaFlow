@@ -229,7 +229,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
 
     return (
         <div 
-            className={`absolute bottom-4 left-4 sm:bottom-6 sm:left-6 z-50 flex items-center overflow-hidden ${glassPanelClass} ${isOpen ? 'rounded-full pl-3 pr-5 sm:pr-6 h-10 sm:h-14' : 'rounded-full w-10 h-10 sm:w-14 sm:h-14 justify-center cursor-pointer hover:scale-105'}`}
+            className={`absolute bottom-4 left-4 sm:bottom-6 sm:left-6 z-50 flex items-center overflow-hidden ${glassPanelClass} ${isOpen ? 'rounded-full pl-2 pr-5 sm:pl-3 pr-6 h-10 sm:h-14' : 'rounded-full w-10 h-10 sm:w-14 sm:h-14 justify-center cursor-pointer hover:scale-105'}`}
             onClick={() => !isOpen && setIsOpen(true)}
             style={{ transitionProperty: 'width, height, border-radius, background-color' }}
         >
