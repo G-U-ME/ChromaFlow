@@ -553,14 +553,14 @@ const GridCanvas: React.FC<GridCanvasProps> = ({
             className="absolute left-4 bottom-[4.5rem] sm:left-6 sm:bottom-[6.5rem] z-30 flex flex-col items-start pointer-events-none"
           >
              {/* Glass Background Strip - Static Width */}
-             <div className={`absolute top-0 left-0 bottom-0 w-[3rem] sm:w-[4rem] rounded-[2rem] ${glassPanelClass} pointer-events-auto`} />
+             <div className={`absolute top-0 left-0 bottom-0 w-[2.5rem] sm:w-[3rem] rounded-[2rem] ${glassPanelClass} pointer-events-auto`} />
 
              {/* Scroll Container - Expands on Hover to avoid clipping children */}
              <div 
                 ref={savedColorsListRef}
-                className="relative max-h-[50vh] overflow-y-auto overflow-x-visible flex flex-col-reverse items-start py-2 pl-[0.5rem] sm:pl-[0.75rem] w-[3rem] sm:w-[4rem] scrollbar-hide transition-[width] duration-200 ease-out pointer-events-auto"
+                className="relative max-h-[50vh] overflow-y-auto overflow-x-visible flex flex-col-reverse items-start py-2 pl-[0.5rem] w-[2.5rem] sm:w-[3rem] scrollbar-hide transition-[width] duration-200 ease-out pointer-events-auto"
                 style={{ 
-                    width: hoveredColorId ? '18rem' : undefined, // Expand to fit overlay
+                    width: hoveredColorId ? '16rem' : undefined, // Expand to fit overlay
                     scrollbarWidth: 'none'
                 }}
                 onWheel={(e) => e.stopPropagation()}
@@ -585,7 +585,7 @@ const GridCanvas: React.FC<GridCanvasProps> = ({
                               <motion.div
                                 whileHover={{ scale: 1.2 }}
                                 whileTap={{ scale: 0.9 }}
-                                className="w-8 h-8 sm:w-10 sm:h-10 rounded-full shadow-sm cursor-pointer"
+                                className="w-6 h-6 sm:w-8 sm:h-8 rounded-full shadow-sm cursor-pointer"
                                 style={{ backgroundColor: hslString, boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}
                                 onClick={() => selectSavedColor(color)}
                               />
@@ -598,7 +598,7 @@ const GridCanvas: React.FC<GridCanvasProps> = ({
                                         animate={{ opacity: 1, scale: 1, x: 0 }}
                                         exit={{ opacity: 0, scale: 0.8, transition: { duration: 0.15 } }}
                                         transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                                        className="absolute top-0 left-0 z-50 flex items-center rounded-full shadow-lg cursor-pointer h-8 sm:h-10"
+                                        className="absolute top-0 left-0 z-50 flex items-center rounded-full shadow-lg cursor-pointer h-6 sm:h-8"
                                         style={{
                                             backgroundColor: isDark ? 'rgba(20,20,20,0.9)' : 'rgba(255,255,255,0.9)',
                                             backdropFilter: 'blur(10px)',
@@ -612,7 +612,7 @@ const GridCanvas: React.FC<GridCanvasProps> = ({
                                         }}
                                     >
                                         <div 
-                                            className="w-8 h-8 sm:w-10 sm:h-10 rounded-full shadow-sm flex-shrink-0"
+                                            className="w-6 h-6 sm:w-8 sm:h-8 rounded-full shadow-sm flex-shrink-0"
                                             style={{ backgroundColor: hslString }}
                                             onClick={() => selectSavedColor(color)}
                                         />
