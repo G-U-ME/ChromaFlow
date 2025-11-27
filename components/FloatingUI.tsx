@@ -179,7 +179,7 @@ const FloatingUI: React.FC<FloatingUIProps> = ({
 
                 {/* Color Format Toggle */}
                 <button 
-                    className={`${iconButtonClass} h-auto py-3 font-mono text-[15px] font-bold`} 
+                    className={`${iconButtonClass} h-auto py-1 font-mono text-[15px] font-bold`} 
                     onClick={toggleColorFormat}
                     title="Change Color Format"
                 >
