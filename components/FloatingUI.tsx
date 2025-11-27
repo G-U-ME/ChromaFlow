@@ -95,8 +95,8 @@ const FloatingUI: React.FC<FloatingUIProps> = ({
                 </div>
             </div>
 
-            {/* Top Right: Unified Control Island */}
-            <div className={`absolute top-4 right-4 sm:top-6 sm:right-6 flex items-center p-1 sm:p-1.5 rounded-full pointer-events-auto ${glassPanelClass}`}>
+            {/* Bottom Right: Unified Control Island */}
+            <div className={`absolute bottom-4 right-4 sm:bottom-6 sm:right-6 flex flex-col items-center p-1 sm:p-1.5 rounded-full pointer-events-auto ${glassPanelClass}`}>
                 
                 {/* Theme Toggle */}
                 <button 
@@ -125,18 +125,18 @@ const FloatingUI: React.FC<FloatingUIProps> = ({
                     )}
                 </button>
 
-                <div className="w-px h-6 bg-current opacity-10 mx-1"></div>
+                <div className="h-px w-6 bg-current opacity-10 my-1"></div>
 
                 {/* Color Format Toggle */}
                 <button 
-                    className={`${iconButtonClass} w-auto px-3 font-mono text-xs font-bold`} 
+                    className={`${iconButtonClass} h-auto py-3 font-mono text-[10px] font-bold`} 
                     onClick={toggleColorFormat}
                     title="Change Color Format"
                 >
                     {colorFormat}
                 </button>
 
-                <div className="w-px h-6 bg-current opacity-10 mx-1"></div>
+                <div className="h-px w-6 bg-current opacity-10 my-1"></div>
 
                 {/* Grid Labels Toggle */}
                 <button 
