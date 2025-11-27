@@ -49,7 +49,7 @@ const GridCanvas: React.FC<GridCanvasProps> = ({
   // Store visible color codes as strings "L_S"
   const [visibleColorCodes, setVisibleColorCodes] = useState<Set<string>>(new Set());
 
-  const prevStepRef = useRef(Math.max(1, Math.round(viewState.step)));
+  const prevStepRef = useRef(viewState.step);
 
   // --- JUMP LOGIC ---
   // Check if the external selectedColor matches our current internal selection.
@@ -87,8 +87,8 @@ const GridCanvas: React.FC<GridCanvasProps> = ({
 
 
   useEffect(() => {
-    const currentStep = Math.max(1, Math.round(viewState.step));
-    if (currentStep !== prevStepRef.current) {
+    const currentStep = viewState.step;
+    if (Math.abs(currentStep - prevStepRef.current) > 0.0001) {
         const delta = prevStepRef.current - currentStep;
         setGridOrigin(prev => ({
             l: prev.l + selectedCell.c * delta,
@@ -115,7 +115,7 @@ const GridCanvas: React.FC<GridCanvasProps> = ({
 
   // VIRTUALIZATION LOGIC
   const visibleItems = useMemo(() => {
-    const step = Math.max(1, Math.round(viewState.step));
+    const step = viewState.step;
     
     const buffer = 2;
     // Calculate visible range
@@ -148,25 +148,40 @@ const GridCanvas: React.FC<GridCanvasProps> = ({
   }, [viewState, viewportSize, gridOrigin]);
 
   // Zoom Logic - Anchored to Selected Cell
-  const performZoom = (newRawScale: number) => {
+  const performZoom = (newRawScale: number, pinchDelta: number = 0) => {
     if (snapTimeout.current) clearTimeout(snapTimeout.current);
 
     let newScale = newRawScale;
     let newStep = viewState.step;
 
-    const isZoomingIn = newRawScale > viewState.scale;
-    const isZoomingOut = newRawScale < viewState.scale;
-
     // Step change thresholds
     if (newScale > 1.2) {
         newScale = 1.2; 
-        if (isZoomingIn) newStep = Math.max(1, viewState.step - 1);
+        
+        if (pinchDelta !== 0) {
+             // Continuous Touch Logic for Density (Tolerance)
+             // When screen > 120% continue double finger enlarge (pinchDelta > 0), 
+             // Density size will be real-time change.
+             const DENSITY_SENSITIVITY = 0.05;
+             // Expanding fingers (delta > 0) -> finer detail (smaller step)
+             // Pinching in (delta < 0) -> coarser detail (larger step)
+             newStep = Math.max(0.1, Math.min(25, viewState.step - pinchDelta * DENSITY_SENSITIVITY));
+        } else {
+             // Discrete Mouse/Key Logic (Fallback)
+             if (newRawScale > viewState.scale) {
+                 newStep = Math.max(0.1, viewState.step - 1);
+             }
+        }
+        
     } else if (newScale < 0.8) {
         newScale = 0.8; 
-        if (isZoomingOut) newStep = Math.min(25, viewState.step + 1); 
+        if (newRawScale < viewState.scale) {
+             // Discrete logic for zooming out for now, unless requested otherwise
+             newStep = Math.min(25, viewState.step + 1); 
+        }
     }
 
-    if (newStep !== viewState.step) {
+    if (Math.abs(newStep - viewState.step) > 0.0001) {
         onToleranceChange(newStep, 25);
     }
 
@@ -221,13 +236,14 @@ const GridCanvas: React.FC<GridCanvasProps> = ({
         const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
         
         if (lastPinchDist.current) {
+            const pinchDelta = dist - lastPinchDist.current;
             const rawRatio = dist / lastPinchDist.current;
             // Dampen the pinch sensitivity significantly
-            const sensitivity = 0.1;
+            const sensitivity = 1;
             const ratio = 1 + (rawRatio - 1) * sensitivity;
 
             const newRawScale = viewState.scale * ratio;
-            performZoom(newRawScale);
+            performZoom(newRawScale, pinchDelta);
         }
         lastPinchDist.current = dist;
         return;
@@ -277,15 +293,6 @@ const GridCanvas: React.FC<GridCanvasProps> = ({
       onColorSelect({ h: hue, s, l });
       
       // 2. Toggle Visibility of this color
-      // Use fixed 2 decimals for consistency in keys if using float
-      // Actually, items have floating L/S.
-      // Key collision might happen if we round?
-      // Previous logic used Math.round for keys.
-      // Let's stick to Math.round for keys for simplicity/bucketing, 
-      // OR use the exact string if we want per-decimal selection visibility.
-      // Given the "integer based colors" note in prompt, maybe round is safer for "buckets".
-      // But now we support decimals.
-      // Let's use a precision-safe key.
       const colorKey = `${l.toFixed(2)}_${s.toFixed(2)}`;
       
       setVisibleColorCodes(prev => {
@@ -405,7 +412,6 @@ const GridCanvas: React.FC<GridCanvasProps> = ({
       >
         {visibleItems.map((item) => {
             const isSelected = selectedCell.c === item.c && selectedCell.r === item.r;
-            // Update key to be more precise for decimals
             const colorKey = `${item.l.toFixed(2)}_${item.s.toFixed(2)}`;
             const isCodeVisible = visibleColorCodes.has(colorKey);
             
