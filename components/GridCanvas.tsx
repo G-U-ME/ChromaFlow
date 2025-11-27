@@ -169,7 +169,7 @@ const GridCanvas: React.FC<GridCanvasProps> = ({
         } else {
              // Discrete Mouse/Key Logic (Fallback)
              if (newRawScale > viewState.scale) {
-                 newStep = Math.max(1, viewState.step - 1);
+                 newStep = Math.min(25, Math.max(1, viewState.step - 1));
              }
         }
         
@@ -186,7 +186,7 @@ const GridCanvas: React.FC<GridCanvasProps> = ({
         } else {
             // Discrete Mouse/Key Logic (Fallback)
             if (newRawScale < viewState.scale) {
-                 newStep = Math.max(1, viewState.step + 1); 
+                 newStep = Math.min(25, Math.max(1, viewState.step + 1)); 
             }
         }
     }
