@@ -158,11 +158,11 @@ const GridCanvas: React.FC<GridCanvasProps> = ({
     const isZoomingOut = newRawScale < viewState.scale;
 
     // Step change thresholds
-    if (newScale > 1.2) {
-        newScale = 1.2; // Clamp scale for step transition
+    if (newScale > 1.5) {
+        newScale = 1.0; // Reset scale to center to prevent rapid firing
         if (isZoomingIn) newStep = Math.max(1, viewState.step - 1);
-    } else if (newScale < 0.8) {
-        newScale = 0.8; // Clamp scale for step transition
+    } else if (newScale < 0.6) {
+        newScale = 1.0; // Reset scale to center
         if (isZoomingOut) newStep = Math.min(25, viewState.step + 1); 
     }
 
@@ -221,7 +221,11 @@ const GridCanvas: React.FC<GridCanvasProps> = ({
         const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
         
         if (lastPinchDist.current) {
-            const ratio = dist / lastPinchDist.current;
+            const rawRatio = dist / lastPinchDist.current;
+            // Dampen the pinch sensitivity significantly
+            const sensitivity = 0.2;
+            const ratio = 1 + (rawRatio - 1) * sensitivity;
+
             const newRawScale = viewState.scale * ratio;
             performZoom(newRawScale);
         }
@@ -419,12 +423,13 @@ const GridCanvas: React.FC<GridCanvasProps> = ({
                 }}>
                     <div 
                         className={`w-full h-full rounded-[8px] transition-transform duration-200 ease-out origin-center
-                            hover:scale-110 active:scale-95 no-select flex items-center justify-center
-                            ${isSelected ? 'ring-2 ring-offset-2 ring-offset-transparent' : ''}`}
+                            hover:scale-110 active:scale-95 no-select flex items-center justify-center`}
                         style={{ 
                             backgroundColor: hslString,
                             // Use the contrast color for the ring if selected
-                            boxShadow: isSelected ? `0 0 0 2px ${contrastColor}` : 'none'
+                            boxShadow: isSelected 
+                                ? `0 0 0 4px ${contrastColor}, 0px 0px 15px rgba(0, 0, 0, 0.5)` 
+                                : 'none'
                         }}
                         onPointerUp={(e) => {
                             if (dragStartPos.current) {
