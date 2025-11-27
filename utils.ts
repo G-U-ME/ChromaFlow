@@ -48,6 +48,13 @@ export const getPingPongValue = (index: number, max: number) => {
     return rem > max ? cycle - rem : rem;
 }
 
+export const getBouncedValue = (value: number, max: number) => {
+    const cycle = 2 * max;
+    let rem = value % cycle;
+    if (rem < 0) rem += cycle;
+    return rem > max ? cycle - rem : rem;
+};
+
 export const describeArc = (x: number, y: number, innerRadius: number, outerRadius: number, startAngle: number, endAngle: number) => {
     const start = polarToCartesian(x, y, outerRadius, endAngle);
     const end = polarToCartesian(x, y, outerRadius, startAngle);

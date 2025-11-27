@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState, useMemo } from 'react';
 import { ViewState, ColorFormat, Theme } from '../types';
-import { formatColor, getContrastColor, getPingPongValue } from '../utils';
+import { formatColor, getContrastColor, getBouncedValue } from '../utils';
 
 interface GridCanvasProps {
   viewState: ViewState;
@@ -36,9 +36,15 @@ const GridCanvas: React.FC<GridCanvasProps> = ({
   const lastPos = useRef<{ x: number; y: number } | null>(null);
   const dragStartPos = useRef<{ x: number; y: number } | null>(null);
   const snapTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [activeSwatch, setActiveSwatch] = useState<string | null>(null);
+  
   const [viewportSize, setViewportSize] = useState({ w: window.innerWidth, h: window.innerHeight });
   
+  // Selection and Color State
+  const [selectedCell, setSelectedCell] = useState<{ c: number, r: number }>({ c: 0, r: 0 });
+  const [baseColor, setBaseColor] = useState<{ l: number, s: number }>({ l: 50, s: 50 });
+  // Store visible color codes as strings "L_S"
+  const [visibleColorCodes, setVisibleColorCodes] = useState<Set<string>>(new Set());
+
   // Pointers for multi-touch
   const pointers = useRef<Map<number, {x: number, y: number}>>(new Map());
   const lastPinchDist = useRef<number | null>(null);
@@ -57,9 +63,14 @@ const GridCanvas: React.FC<GridCanvasProps> = ({
   // VIRTUALIZATION LOGIC
   const visibleItems = useMemo(() => {
     const step = Math.max(1, Math.round(viewState.step));
-    const maxIndex = Math.floor(100 / step); // The index where the value reaches 100
     
     const buffer = 2;
+    // Calculate visible range
+    // viewState.x is the offset of the world origin (0,0) in screen pixels
+    // ScreenX = viewState.x + WorldX * scale
+    // WorldX = (ScreenX - viewState.x) / scale
+    // Col = WorldX / CELL_W
+    
     const minCol = Math.floor((0 - viewState.x) / (viewState.scale * CELL_W)) - buffer;
     const maxCol = Math.ceil((viewportSize.w - viewState.x) / (viewState.scale * CELL_W)) + buffer;
     const minRow = Math.floor((0 - viewState.y) / (viewState.scale * CELL_H)) - buffer;
@@ -69,8 +80,11 @@ const GridCanvas: React.FC<GridCanvasProps> = ({
 
     for (let c = minCol; c <= maxCol; c++) {
         for (let r = minRow; r <= maxRow; r++) {
-            const lVal = getPingPongValue(c, maxIndex) * step;
-            const sVal = getPingPongValue(r, maxIndex) * step;
+            // Calculate color relative to selected cell
+            // The selected cell must strictly maintain 'baseColor'
+            // Neighbors diverge by 'step'
+            const lVal = getBouncedValue(baseColor.l + (c - selectedCell.c) * step, 100);
+            const sVal = getBouncedValue(baseColor.s + (r - selectedCell.r) * step, 100);
 
             items.push({
                 key: `${c}_${r}`,
@@ -85,10 +99,10 @@ const GridCanvas: React.FC<GridCanvasProps> = ({
     }
     
     return items;
-  }, [viewState, viewportSize]);
+  }, [viewState, viewportSize, selectedCell, baseColor]);
 
-  // Shared Zoom Logic
-  const performZoom = (newRawScale: number, center: {x: number, y: number}) => {
+  // Zoom Logic - Anchored to Selected Cell
+  const performZoom = (newRawScale: number) => {
     if (snapTimeout.current) clearTimeout(snapTimeout.current);
 
     let newScale = newRawScale;
@@ -97,11 +111,12 @@ const GridCanvas: React.FC<GridCanvasProps> = ({
     const isZoomingIn = newRawScale > viewState.scale;
     const isZoomingOut = newRawScale < viewState.scale;
 
+    // Step change thresholds
     if (newScale > 1.2) {
-        newScale = 1.2;
+        newScale = 1.2; // Clamp scale for step transition
         if (isZoomingIn) newStep = Math.max(1, viewState.step - 1);
     } else if (newScale < 0.8) {
-        newScale = 0.8;
+        newScale = 0.8; // Clamp scale for step transition
         if (isZoomingOut) newStep = Math.min(25, viewState.step + 1); 
     }
 
@@ -109,23 +124,19 @@ const GridCanvas: React.FC<GridCanvasProps> = ({
         onToleranceChange(newStep, 25);
     }
 
-    // Calculate new position to keep focus point fixed
-    // world = (screen - offset) / oldScale
-    // newOffset = screen - world * newScale
+    // Calculate new view position to keep SELECTED CELL fixed on screen
     
-    const worldX = (center.x - viewState.x) / viewState.scale;
-    const worldY = (center.y - viewState.y) / viewState.scale;
+    // Current Screen Position of Selected Cell
+    // Screen = Offset + World * Scale
+    const selWorldX = selectedCell.c * CELL_W;
+    const selWorldY = selectedCell.r * CELL_H;
+    
+    const selScreenX = viewState.x + selWorldX * viewState.scale;
+    const selScreenY = viewState.y + selWorldY * viewState.scale;
 
-    // Correction for step change (maintaining phase/ratio)
-    const oldMaxIndex = Math.floor(100 / viewState.step);
-    const newMaxIndex = Math.floor(100 / newStep);
-    const stepRatio = (oldMaxIndex > 0 && newMaxIndex > 0) ? newMaxIndex / oldMaxIndex : 1;
-
-    const targetWorldX = worldX * stepRatio;
-    const targetWorldY = worldY * stepRatio;
-
-    const newX = center.x - targetWorldX * newScale;
-    const newY = center.y - targetWorldY * newScale;
+    // New Offset = Screen - World * NewScale
+    const newX = selScreenX - selWorldX * newScale;
+    const newY = selScreenY - selWorldY * newScale;
 
     setViewState({
         x: newX,
@@ -139,19 +150,17 @@ const GridCanvas: React.FC<GridCanvasProps> = ({
 
   // Handle Pointer Events (Mouse + Touch)
   const handlePointerDown = (e: React.PointerEvent) => {
-    // Always track pointer
     pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
     (e.target as HTMLElement).setPointerCapture(e.pointerId);
 
     if (pointers.current.size === 1) {
-        if (e.button !== 0) return; // Only left click for single pointer
+        if (e.button !== 0) return; 
         setIsDraggingCanvas(true);
         lastPos.current = { x: e.clientX, y: e.clientY };
         dragStartPos.current = { x: e.clientX, y: e.clientY };
         if (snapTimeout.current) clearTimeout(snapTimeout.current);
     } else if (pointers.current.size === 2) {
-        // Pinch Start
-        setIsDraggingCanvas(false); // Disable panning during pinch to avoid conflict
+        setIsDraggingCanvas(false);
         const pts = Array.from(pointers.current.values()) as { x: number; y: number }[];
         lastPinchDist.current = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
     }
@@ -164,14 +173,11 @@ const GridCanvas: React.FC<GridCanvasProps> = ({
     if (pointers.current.size === 2) {
         const pts = Array.from(pointers.current.values()) as { x: number; y: number }[];
         const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
-        const cx = (pts[0].x + pts[1].x) / 2;
-        const cy = (pts[0].y + pts[1].y) / 2;
-
+        
         if (lastPinchDist.current) {
-            // Calculate scale ratio
             const ratio = dist / lastPinchDist.current;
             const newRawScale = viewState.scale * ratio;
-            performZoom(newRawScale, {x: cx, y: cy});
+            performZoom(newRawScale);
         }
         lastPinchDist.current = dist;
         return;
@@ -201,19 +207,34 @@ const GridCanvas: React.FC<GridCanvasProps> = ({
     }
 
     if (pointers.current.size === 0) {
-        // All fingers lifted
         if (isDraggingCanvas) {
             setIsDraggingCanvas(false);
             triggerSnap();
         }
         lastPos.current = null;
     } else if (pointers.current.size === 1) {
-        // Switched from pinch to single finger?
-        // Resume panning from current point to prevent jump
         const p = pointers.current.values().next().value as { x: number; y: number };
         lastPos.current = { x: p.x, y: p.y };
         setIsDraggingCanvas(true);
     }
+  };
+
+  const handleCellClick = (c: number, r: number, l: number, s: number) => {
+      // 1. Update Selection
+      setSelectedCell({ c, r });
+      setBaseColor({ l, s });
+
+      // 2. Toggle Visibility of this color
+      const colorKey = `${Math.round(l)}_${Math.round(s)}`;
+      setVisibleColorCodes(prev => {
+          const next = new Set(prev);
+          if (next.has(colorKey)) {
+              next.delete(colorKey);
+          } else {
+              next.add(colorKey);
+          }
+          return next;
+      });
   };
 
   const triggerSnap = () => {
@@ -224,6 +245,10 @@ const GridCanvas: React.FC<GridCanvasProps> = ({
   };
 
   const snapToNearest = () => {
+      // Snap logic can probably stay based on screen center or selected cell
+      // Let's snap such that the grid aligns nicely, maybe align the selected cell to grid?
+      // Or just standard grid alignment.
+      // Preserving original logic of aligning center screen to nearest cell center roughly.
     const cx = viewportSize.w / 2;
     const cy = viewportSize.h / 2;
     const worldCx = (cx - viewState.x) / viewState.scale;
@@ -266,12 +291,11 @@ const GridCanvas: React.FC<GridCanvasProps> = ({
 
   const handleWheel = (e: React.WheelEvent) => {
     e.preventDefault();
-    // Wheel Delta Logic
     const delta = -Math.sign(e.deltaY); 
     const zoomSpeed = 0.05;
     const newRawScale = viewState.scale + (delta * zoomSpeed);
     
-    performZoom(newRawScale, { x: viewportSize.w / 2, y: viewportSize.h / 2 });
+    performZoom(newRawScale);
   };
 
   useEffect(() => {
@@ -322,7 +346,10 @@ const GridCanvas: React.FC<GridCanvasProps> = ({
         className="absolute top-0 left-0 w-0 h-0"
       >
         {visibleItems.map((item) => {
-            const isActive = activeSwatch === item.key;
+            const isSelected = selectedCell.c === item.c && selectedCell.r === item.r;
+            const colorKey = `${Math.round(item.l)}_${Math.round(item.s)}`;
+            const isCodeVisible = visibleColorCodes.has(colorKey);
+            
             const hslString = `hsl(${hue}, ${item.s}%, ${item.l}%)`;
             const code = formatColor({ h: hue, s: item.s, l: item.l }, colorFormat);
             const contrastColor = getContrastColor({ h: hue, s: item.s, l: item.l });
@@ -332,26 +359,31 @@ const GridCanvas: React.FC<GridCanvasProps> = ({
                     transform: `translate(${item.x}px, ${item.y}px)`, 
                     width: RECT_WIDTH,
                     height: RECT_HEIGHT,
-                    willChange: 'transform'
+                    willChange: 'transform',
+                    zIndex: isSelected ? 10 : 1
                 }}>
                     <div 
                         className={`w-full h-full rounded-[8px] transition-transform duration-200 ease-out origin-center
-                            hover:scale-110 active:scale-95 no-select flex items-center justify-center`}
-                        style={{ backgroundColor: hslString }}
+                            hover:scale-110 active:scale-95 no-select flex items-center justify-center
+                            ${isSelected ? 'ring-2 ring-offset-2 ring-offset-transparent' : ''}`}
+                        style={{ 
+                            backgroundColor: hslString,
+                            // Use the contrast color for the ring if selected
+                            boxShadow: isSelected ? `0 0 0 2px ${contrastColor}` : 'none'
+                        }}
                         onPointerUp={(e) => {
-                            // Distance check to differentiate Click vs Drag
                             if (dragStartPos.current) {
                                 const dist = Math.sqrt(
                                     Math.pow(e.clientX - dragStartPos.current.x, 2) + 
                                     Math.pow(e.clientY - dragStartPos.current.y, 2)
                                 );
                                 if (dist < 5) {
-                                    setActiveSwatch(prev => prev === item.key ? null : item.key);
+                                    handleCellClick(item.c, item.r, item.l, item.s);
                                 }
                             }
                         }}
                     >
-                        {isActive && (
+                        {isCodeVisible && (
                             <span 
                                 className="font-bold text-xs px-2 py-1 rounded select-none pointer-events-none"
                                 style={{ color: contrastColor }}
