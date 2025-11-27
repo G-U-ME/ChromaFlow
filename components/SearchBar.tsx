@@ -105,27 +105,42 @@ const SearchBar: React.FC<SearchBarProps> = ({
          onColorChange({ h, s, l });
     };
 
-    const handleHexInput = (index: number, key: string) => {
-        // Check if valid hex char
-        if (!/^[0-9a-fA-F]$/.test(key)) return;
+    const handleHexChange = (index: number, valStr: string) => {
+        // Handle deletion
+        if (valStr === '') {
+            const newValues = [...hexValues];
+            newValues[index] = '0';
+            setHexValues(newValues);
 
-        const upperKey = key.toUpperCase();
-        const newValues = [...hexValues];
-        
-        // "Input directly replaces content"
-        newValues[index] = upperKey;
-        setHexValues(newValues);
-
-        // Auto focus next
-        if (index < 5) {
-            inputRefs.current[index + 1]?.focus();
+            const hexStr = "#" + newValues.join('');
+            const rgb = HexToRGB(hexStr);
+            if (rgb) onColorChange(RGBToHSL(rgb[0], rgb[1], rgb[2]));
+            return;
         }
 
-        // Update Color
-        const hexStr = "#" + newValues.join('');
-        const rgb = HexToRGB(hexStr);
-        if (rgb) {
-            onColorChange(RGBToHSL(rgb[0], rgb[1], rgb[2]));
+        // Handle input: take the last character
+        const char = valStr.slice(-1);
+        
+        // Check if valid hex char
+        if (/^[0-9a-fA-F]$/.test(char)) {
+            const upperKey = char.toUpperCase();
+            const newValues = [...hexValues];
+            
+            // "Input directly replaces content"
+            newValues[index] = upperKey;
+            setHexValues(newValues);
+
+            // Auto focus next
+            if (index < 5) {
+                inputRefs.current[index + 1]?.focus();
+            }
+
+            // Update Color
+            const hexStr = "#" + newValues.join('');
+            const rgb = HexToRGB(hexStr);
+            if (rgb) {
+                onColorChange(RGBToHSL(rgb[0], rgb[1], rgb[2]));
+            }
         }
     };
 
@@ -135,9 +150,6 @@ const SearchBar: React.FC<SearchBarProps> = ({
             const newValues = [...hexValues];
             newValues[index] = '0'; // "Delete operation makes char 0"
             setHexValues(newValues);
-            
-            // Logic for backspace focus? Not specified, but usually stays or goes back.
-            // Prompt only says "Delete operation makes... 0".
             
             // Update Color
             const hexStr = "#" + newValues.join('');
@@ -207,17 +219,9 @@ const SearchBar: React.FC<SearchBarProps> = ({
                     className={`bg-transparent text-center outline-none font-mono font-bold border-b-2 ${isDark ? 'border-white/20 focus:border-white' : 'border-black/10 focus:border-black'}`}
                     style={{ width: '1.5ch' }}
                     value={char}
-                    onKeyDown={(e) => {
-                        // Handle alphanumeric
-                        if (/^[0-9a-zA-Z]$/.test(e.key)) {
-                            e.preventDefault(); // Prevent double input since we handle it manually
-                            handleHexInput(i, e.key);
-                        } else {
-                            handleHexKeyDown(i, e);
-                        }
-                    }}
-                    onChange={() => {}} // Handled by onKeyDown to support the "replace" behavior strictly
-                    onFocus={(e) => e.target.select()} // Auto select for easy replace?
+                    onKeyDown={(e) => handleHexKeyDown(i, e)}
+                    onChange={(e) => handleHexChange(i, e.target.value)}
+                    onFocus={(e) => e.target.select()} // Auto select for easy replace
                 />
             ))}
         </div>
