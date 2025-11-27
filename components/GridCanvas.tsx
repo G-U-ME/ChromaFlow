@@ -158,11 +158,11 @@ const GridCanvas: React.FC<GridCanvasProps> = ({
     const isZoomingOut = newRawScale < viewState.scale;
 
     // Step change thresholds
-    if (newScale > 1.5) {
-        newScale = 1.0; // Reset scale to center to prevent rapid firing
+    if (newScale > 1.2) {
+        newScale = 1.2; 
         if (isZoomingIn) newStep = Math.max(1, viewState.step - 1);
-    } else if (newScale < 0.6) {
-        newScale = 1.0; // Reset scale to center
+    } else if (newScale < 0.8) {
+        newScale = 0.8; 
         if (isZoomingOut) newStep = Math.min(25, viewState.step + 1); 
     }
 
@@ -223,7 +223,7 @@ const GridCanvas: React.FC<GridCanvasProps> = ({
         if (lastPinchDist.current) {
             const rawRatio = dist / lastPinchDist.current;
             // Dampen the pinch sensitivity significantly
-            const sensitivity = 0.2;
+            const sensitivity = 0.1;
             const ratio = 1 + (rawRatio - 1) * sensitivity;
 
             const newRawScale = viewState.scale * ratio;
