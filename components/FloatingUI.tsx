@@ -1,7 +1,8 @@
 
 import React, { useState, useRef } from 'react';
-import { ViewState, Theme, ColorFormat } from '../types';
+import { ViewState, Theme, ColorFormat, HSL } from '../types';
 import ColorWheel from './ColorWheel';
+import SearchBar from './SearchBar';
 
 interface FloatingUIProps {
     viewState: ViewState;
@@ -14,6 +15,8 @@ interface FloatingUIProps {
     toggleColorFormat: () => void;
     showGridLabels: boolean;
     toggleGridLabels: () => void;
+    currentColor: HSL;
+    onColorChange: (color: HSL) => void;
 }
 
 const FloatingUI: React.FC<FloatingUIProps> = ({
@@ -25,7 +28,9 @@ const FloatingUI: React.FC<FloatingUIProps> = ({
     colorFormat,
     toggleColorFormat,
     showGridLabels,
-    toggleGridLabels
+    toggleGridLabels,
+    currentColor,
+    onColorChange
 }) => {
     const [wheelOpen, setWheelOpen] = useState(false);
     const isDark = theme === 'dark';
@@ -47,6 +52,15 @@ const FloatingUI: React.FC<FloatingUIProps> = ({
     return (
         <div className="absolute inset-0 pointer-events-none z-40 overflow-hidden font-sans">
             
+            <div className="pointer-events-auto">
+                <SearchBar 
+                    currentColor={currentColor}
+                    onColorChange={onColorChange}
+                    colorFormat={colorFormat}
+                    theme={theme}
+                />
+            </div>
+
             {/* Tolerance/Density Indicator (Top Center - Minimalist) */}
             <div 
                 className={`absolute top-4 sm:top-6 left-1/2 -translate-x-1/2 transition-all duration-500 ease-out ${toleranceData.visible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}

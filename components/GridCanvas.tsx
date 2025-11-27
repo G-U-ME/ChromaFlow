@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState, useMemo } from 'react';
-import { ViewState, ColorFormat, Theme } from '../types';
+import { ViewState, ColorFormat, Theme, HSL } from '../types';
 import { formatColor, getContrastColor, getBouncedValue } from '../utils';
 
 interface GridCanvasProps {
@@ -12,6 +12,8 @@ interface GridCanvasProps {
   onToleranceChange: (val: number, max: number) => void;
   isDraggingCanvas: boolean;
   setIsDraggingCanvas: (v: boolean) => void;
+  selectedColor: HSL;
+  onColorSelect: (color: HSL) => void;
 }
 
 // Constants for layout
@@ -31,6 +33,8 @@ const GridCanvas: React.FC<GridCanvasProps> = ({
   onToleranceChange,
   isDraggingCanvas,
   setIsDraggingCanvas,
+  selectedColor,
+  onColorSelect
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const lastPos = useRef<{ x: number; y: number } | null>(null);
@@ -46,6 +50,41 @@ const GridCanvas: React.FC<GridCanvasProps> = ({
   const [visibleColorCodes, setVisibleColorCodes] = useState<Set<string>>(new Set());
 
   const prevStepRef = useRef(Math.max(1, Math.round(viewState.step)));
+
+  // --- JUMP LOGIC ---
+  // Check if the external selectedColor matches our current internal selection.
+  // If not, it means the user changed it via SearchBar, so we "jump" the grid.
+  useEffect(() => {
+      // Calculate what the current selected cell's color *should* be
+      const currentL = getBouncedValue(gridOrigin.l + selectedCell.c * prevStepRef.current, 100);
+      const currentS = getBouncedValue(gridOrigin.s + selectedCell.r * prevStepRef.current, 100);
+      
+      // Compare with epsilon for float tolerance
+      const epsilon = 0.01;
+      const diffL = Math.abs(currentL - selectedColor.l);
+      const diffS = Math.abs(currentS - selectedColor.s);
+      
+      if (diffL > epsilon || diffS > epsilon) {
+          // Jump needed!
+          // We set the grid origin to exactly the target color
+          // And reset selected cell to (0,0)
+          setGridOrigin({ l: selectedColor.l, s: selectedColor.s });
+          setSelectedCell({ c: 0, r: 0 });
+          
+          // Also recenter the view on (0,0)
+          const cx = viewportSize.w / 2;
+          const cy = viewportSize.h / 2;
+          // (0,0) is at World(0,0). 
+          // ScreenX = ViewState.x + 0 * Scale -> ViewState.x = ScreenX
+          // We want (0,0) to be at Center(cx, cy).
+          setViewState(prev => ({
+             ...prev,
+             x: cx, // Offset so that 0 is at cx
+             y: cy
+          }));
+      }
+  }, [selectedColor, viewportSize]); // Depend on selectedColor. When it changes, we check.
+
 
   useEffect(() => {
     const currentStep = Math.max(1, Math.round(viewState.step));
@@ -80,11 +119,6 @@ const GridCanvas: React.FC<GridCanvasProps> = ({
     
     const buffer = 2;
     // Calculate visible range
-    // viewState.x is the offset of the world origin (0,0) in screen pixels
-    // ScreenX = viewState.x + WorldX * scale
-    // WorldX = (ScreenX - viewState.x) / scale
-    // Col = WorldX / CELL_W
-    
     const minCol = Math.floor((0 - viewState.x) / (viewState.scale * CELL_W)) - buffer;
     const maxCol = Math.ceil((viewportSize.w - viewState.x) / (viewState.scale * CELL_W)) + buffer;
     const minRow = Math.floor((0 - viewState.y) / (viewState.scale * CELL_H)) - buffer;
@@ -235,8 +269,21 @@ const GridCanvas: React.FC<GridCanvasProps> = ({
       // 1. Update Selection
       setSelectedCell({ c, r });
       
+      // Notify App
+      onColorSelect({ h: hue, s, l });
+      
       // 2. Toggle Visibility of this color
-      const colorKey = `${Math.round(l)}_${Math.round(s)}`;
+      // Use fixed 2 decimals for consistency in keys if using float
+      // Actually, items have floating L/S.
+      // Key collision might happen if we round?
+      // Previous logic used Math.round for keys.
+      // Let's stick to Math.round for keys for simplicity/bucketing, 
+      // OR use the exact string if we want per-decimal selection visibility.
+      // Given the "integer based colors" note in prompt, maybe round is safer for "buckets".
+      // But now we support decimals.
+      // Let's use a precision-safe key.
+      const colorKey = `${l.toFixed(2)}_${s.toFixed(2)}`;
+      
       setVisibleColorCodes(prev => {
           const next = new Set(prev);
           if (next.has(colorKey)) {
@@ -256,10 +303,6 @@ const GridCanvas: React.FC<GridCanvasProps> = ({
   };
 
   const snapToNearest = () => {
-      // Snap logic can probably stay based on screen center or selected cell
-      // Let's snap such that the grid aligns nicely, maybe align the selected cell to grid?
-      // Or just standard grid alignment.
-      // Preserving original logic of aligning center screen to nearest cell center roughly.
     const cx = viewportSize.w / 2;
     const cy = viewportSize.h / 2;
     const worldCx = (cx - viewState.x) / viewState.scale;
@@ -358,7 +401,8 @@ const GridCanvas: React.FC<GridCanvasProps> = ({
       >
         {visibleItems.map((item) => {
             const isSelected = selectedCell.c === item.c && selectedCell.r === item.r;
-            const colorKey = `${Math.round(item.l)}_${Math.round(item.s)}`;
+            // Update key to be more precise for decimals
+            const colorKey = `${item.l.toFixed(2)}_${item.s.toFixed(2)}`;
             const isCodeVisible = visibleColorCodes.has(colorKey);
             
             const hslString = `hsl(${hue}, ${item.s}%, ${item.l}%)`;

@@ -6,6 +6,7 @@ import { ViewState, Theme, ColorFormat } from './types';
 function App() {
   const [theme, setTheme] = useState<Theme>('dark');
   const [hue, setHue] = useState(210); // Default Blue
+  const [selectedColor, setSelectedColor] = useState({ h: 210, s: 50, l: 50 });
   
   // Center of the infinite grid (0,0) should be at center of screen initially
   const [viewState, setViewState] = useState<ViewState>({
@@ -44,6 +45,11 @@ function App() {
     setColorFormat(next);
   };
 
+  const handleColorChange = (color: { h: number, s: number, l: number }) => {
+    setHue(color.h);
+    setSelectedColor(color);
+  };
+
   return (
     <div className={`w-screen h-screen overflow-hidden relative ${theme === 'dark' ? 'bg-[#101010]' : 'bg-[#E8E7E5]'}`}>
       
@@ -57,6 +63,8 @@ function App() {
         onToleranceChange={handleToleranceChange}
         isDraggingCanvas={isDraggingCanvas}
         setIsDraggingCanvas={setIsDraggingCanvas}
+        selectedColor={selectedColor}
+        onColorSelect={handleColorChange}
       />
 
       <FloatingUI 
@@ -70,6 +78,8 @@ function App() {
         toggleColorFormat={toggleColorFormat}
         showGridLabels={showGridLabels}
         toggleGridLabels={() => setShowGridLabels(!showGridLabels)}
+        currentColor={selectedColor}
+        onColorChange={handleColorChange}
       />
       
     </div>
