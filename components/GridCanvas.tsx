@@ -593,7 +593,7 @@ const GridCanvas: React.FC<GridCanvasProps> = ({
       {/* SAVED COLORS LIST */}
       {savedColors.length > 0 && (
           <div 
-            className="absolute left-4 bottom-[8.5rem] sm:left-6 sm:bottom-[6.5rem] z-30 flex flex-col items-start pointer-events-none"
+            className="absolute left-4 bottom-[7.5rem] sm:left-6 sm:bottom-[6.5rem] z-30 flex flex-col items-start pointer-events-none"
           >
              {/* Glass Background Strip - Static Width */}
              <div className={`absolute top-0 left-0 bottom-0 w-[2.5rem] sm:w-[3rem] rounded-[2rem] ${glassPanelClass} pointer-events-auto`} />
