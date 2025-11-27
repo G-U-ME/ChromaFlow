@@ -236,6 +236,9 @@ const AISearch: React.FC<AISearchProps> = ({ theme, onColorSelect, openSettings 
                                     <input
                                         ref={inputRef}
                                         type="text"
+                                        id="ai-color-search"
+                                        name="ai-color-search"
+                                        autoComplete="off"
                                         className="flex-1 bg-transparent outline-none placeholder-current placeholder-opacity-50 text-sm sm:text-base"
                                         placeholder="Describe a color mood..."
                                         value={prompt}
