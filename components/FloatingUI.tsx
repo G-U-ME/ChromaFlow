@@ -3,6 +3,8 @@ import React, { useState, useRef } from 'react';
 import { ViewState, Theme, ColorFormat, HSL } from '../types';
 import ColorWheel from './ColorWheel';
 import SearchBar from './SearchBar';
+import SettingsModal from './SettingsModal';
+import AISearch from './AISearch';
 
 interface FloatingUIProps {
     viewState: ViewState;
@@ -33,6 +35,7 @@ const FloatingUI: React.FC<FloatingUIProps> = ({
     onColorChange
 }) => {
     const [wheelOpen, setWheelOpen] = useState(false);
+    const [settingsOpen, setSettingsOpen] = useState(false);
     const isDark = theme === 'dark';
 
     // Glassmorphism base styles
@@ -52,6 +55,16 @@ const FloatingUI: React.FC<FloatingUIProps> = ({
     return (
         <div className="absolute inset-0 pointer-events-none z-40 overflow-hidden font-sans">
             
+            {/* Modals */}
+            <div className="pointer-events-auto">
+                <SettingsModal 
+                    isOpen={settingsOpen} 
+                    onClose={() => setSettingsOpen(false)} 
+                    theme={theme} 
+                />
+            </div>
+
+            {/* Bottom Left: Search Bar */}
             <div className="pointer-events-auto">
                 <SearchBar 
                     currentColor={currentColor}
@@ -59,6 +72,29 @@ const FloatingUI: React.FC<FloatingUIProps> = ({
                     colorFormat={colorFormat}
                     theme={theme}
                 />
+            </div>
+
+            {/* Bottom Center: AI Search */}
+            <div className="pointer-events-auto">
+                <AISearch 
+                    theme={theme}
+                    onColorSelect={onColorChange}
+                    openSettings={() => setSettingsOpen(true)}
+                />
+            </div>
+
+            {/* Top Right: Settings Trigger */}
+            <div className={`absolute top-4 right-4 sm:top-6 sm:right-6 pointer-events-auto ${glassPanelClass} rounded-full`}>
+                 <button 
+                    className={iconButtonClass}
+                    onClick={() => setSettingsOpen(true)}
+                    title="Settings"
+                 >
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                    </svg>
+                 </button>
             </div>
 
             {/* Tolerance/Density Indicator (Top Center - Minimalist) */}
