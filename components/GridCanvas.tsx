@@ -370,7 +370,6 @@ const GridCanvas: React.FC<GridCanvasProps> = ({
       setSavedColors(prev => prev.filter(c => c.id !== id));
       if (hoveredColorId === id) {
           setHoveredColorId(null);
-          setHoveredItemRect(null);
       }
   };
   
@@ -572,7 +571,11 @@ const GridCanvas: React.FC<GridCanvasProps> = ({
                       const hslString = `hsl(${color.h}, ${color.s}%, ${color.l}%)`;
                       
                       return (
-                          <div 
+                          <motion.div 
+                            layout
+                            initial={{ opacity: 0, scale: 0 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0, transition: { duration: 0 } }}
                             key={color.id} 
                             className="relative flex-shrink-0 my-1"
                             style={{ zIndex: isHovered ? 50 : 1 }}
@@ -580,13 +583,8 @@ const GridCanvas: React.FC<GridCanvasProps> = ({
                             onMouseLeave={() => setHoveredColorId(null)}
                           >
                               <motion.div
-                                layout
-                                initial={{ opacity: 0, scale: 0 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                exit={{ opacity: 0, scale: 0 }}
                                 whileHover={{ scale: 1.2 }}
                                 whileTap={{ scale: 0.9 }}
-                                transition={{ type: 'spring', stiffness: 400, damping: 25 }}
                                 className="w-8 h-8 rounded-full shadow-sm cursor-pointer"
                                 style={{ backgroundColor: hslString, boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}
                                 onClick={() => selectSavedColor(color)}
@@ -611,12 +609,6 @@ const GridCanvas: React.FC<GridCanvasProps> = ({
                                             width: 'max-content' // Allow it to grow
                                         }}
                                         onWheel={(e) => {
-                                            // Forward scroll to container manually if needed, 
-                                            // but since it's inside, standard bubbling might work?
-                                            // Actually, if it's inside the scroll container, wheel events bubble up 
-                                            // to the container and it scrolls naturally!
-                                            // So we don't need manual forwarding anymore.
-                                            // But we DO need to stop propagation to prevent ZOOM (Canvas).
                                             e.stopPropagation(); 
                                         }}
                                     >
@@ -646,7 +638,7 @@ const GridCanvas: React.FC<GridCanvasProps> = ({
                                     </motion.div>
                                 )}
                               </AnimatePresence>
-                          </div>
+                          </motion.div>
                       );
                   })}
                 </AnimatePresence>
