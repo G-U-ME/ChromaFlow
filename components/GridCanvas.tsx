@@ -41,9 +41,23 @@ const GridCanvas: React.FC<GridCanvasProps> = ({
   
   // Selection and Color State
   const [selectedCell, setSelectedCell] = useState<{ c: number, r: number }>({ c: 0, r: 0 });
-  const [baseColor, setBaseColor] = useState<{ l: number, s: number }>({ l: 50, s: 50 });
+  const [gridOrigin, setGridOrigin] = useState<{ l: number, s: number }>({ l: 50, s: 50 });
   // Store visible color codes as strings "L_S"
   const [visibleColorCodes, setVisibleColorCodes] = useState<Set<string>>(new Set());
+
+  const prevStepRef = useRef(Math.max(1, Math.round(viewState.step)));
+
+  useEffect(() => {
+    const currentStep = Math.max(1, Math.round(viewState.step));
+    if (currentStep !== prevStepRef.current) {
+        const delta = prevStepRef.current - currentStep;
+        setGridOrigin(prev => ({
+            l: prev.l + selectedCell.c * delta,
+            s: prev.s + selectedCell.r * delta
+        }));
+        prevStepRef.current = currentStep;
+    }
+  }, [viewState.step, selectedCell]);
 
   // Pointers for multi-touch
   const pointers = useRef<Map<number, {x: number, y: number}>>(new Map());
@@ -80,11 +94,9 @@ const GridCanvas: React.FC<GridCanvasProps> = ({
 
     for (let c = minCol; c <= maxCol; c++) {
         for (let r = minRow; r <= maxRow; r++) {
-            // Calculate color relative to selected cell
-            // The selected cell must strictly maintain 'baseColor'
-            // Neighbors diverge by 'step'
-            const lVal = getBouncedValue(baseColor.l + (c - selectedCell.c) * step, 100);
-            const sVal = getBouncedValue(baseColor.s + (r - selectedCell.r) * step, 100);
+            // Calculate color relative to grid origin (0,0) for stability
+            const lVal = getBouncedValue(gridOrigin.l + c * step, 100);
+            const sVal = getBouncedValue(gridOrigin.s + r * step, 100);
 
             items.push({
                 key: `${c}_${r}`,
@@ -99,7 +111,7 @@ const GridCanvas: React.FC<GridCanvasProps> = ({
     }
     
     return items;
-  }, [viewState, viewportSize, selectedCell, baseColor]);
+  }, [viewState, viewportSize, gridOrigin]);
 
   // Zoom Logic - Anchored to Selected Cell
   const performZoom = (newRawScale: number) => {
@@ -222,8 +234,7 @@ const GridCanvas: React.FC<GridCanvasProps> = ({
   const handleCellClick = (c: number, r: number, l: number, s: number) => {
       // 1. Update Selection
       setSelectedCell({ c, r });
-      setBaseColor({ l, s });
-
+      
       // 2. Toggle Visibility of this color
       const colorKey = `${Math.round(l)}_${Math.round(s)}`;
       setVisibleColorCodes(prev => {
