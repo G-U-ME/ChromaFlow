@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useState, useMemo } from 'react';
 import { ViewState, ColorFormat, Theme, HSL } from '../types';
 import { formatColor, getContrastColor, getBouncedValue } from '../utils';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface GridCanvasProps {
   viewState: ViewState;
@@ -64,6 +65,7 @@ const GridCanvas: React.FC<GridCanvasProps> = ({
   const lastClickRef = useRef<{ time: number, c: number, r: number } | null>(null);
 
   const prevStepRef = useRef(viewState.step);
+  const savedColorsListRef = useRef<HTMLDivElement>(null);
 
   // --- JUMP LOGIC ---
   // Check if the external selectedColor matches our current internal selection.
@@ -550,6 +552,7 @@ const GridCanvas: React.FC<GridCanvasProps> = ({
       {/* SAVED COLORS LIST */}
       {savedColors.length > 0 && (
           <div 
+            ref={savedColorsListRef}
             className={`absolute left-4 bottom-[4.5rem] sm:left-6 sm:bottom-[6.5rem] z-30 
                        flex flex-col-reverse items-center
                        max-h-[50vh] overflow-y-auto overflow-x-visible
@@ -559,13 +562,22 @@ const GridCanvas: React.FC<GridCanvasProps> = ({
                 width: '3rem',
                 scrollbarWidth: 'none' // Hide scrollbar
             }}
+            onWheel={(e) => e.stopPropagation()}
           >
+            <AnimatePresence mode="popLayout">
               {savedColors.map((color) => {
                   const hslString = `hsl(${color.h}, ${color.s}%, ${color.l}%)`;
                   return (
-                      <div
+                      <motion.div
+                        layout
+                        initial={{ opacity: 0, scale: 0 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0 }}
+                        whileHover={{ scale: 1.2 }}
+                        whileTap={{ scale: 0.9 }}
+                        transition={{ type: 'spring', stiffness: 400, damping: 25 }}
                         key={color.id}
-                        className="w-8 h-8 my-1 rounded-full shadow-sm cursor-pointer flex-shrink-0 transition-all hover:scale-110"
+                        className="w-8 h-8 my-1 rounded-full shadow-sm cursor-pointer flex-shrink-0"
                         style={{ backgroundColor: hslString, boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}
                         onMouseEnter={(e) => {
                             const rect = e.currentTarget.getBoundingClientRect();
@@ -576,12 +588,19 @@ const GridCanvas: React.FC<GridCanvasProps> = ({
                       />
                   );
               })}
+            </AnimatePresence>
           </div>
       )}
 
       {/* HOVER OVERLAY FOR SAVED COLORS (Outside the scroll container to avoid clipping) */}
+      <AnimatePresence>
       {hoveredColorId && hoveredItemRect && (
-          <div
+          <motion.div
+             key={hoveredColorId}
+             initial={{ opacity: 0, scale: 0.8, x: -10 }}
+             animate={{ opacity: 1, scale: 1, x: 0 }}
+             exit={{ opacity: 0, scale: 0.8, transition: { duration: 0.15 } }}
+             transition={{ type: 'spring', stiffness: 500, damping: 30 }}
              className="absolute z-50 flex items-center rounded-full shadow-lg cursor-pointer"
              style={{
                  top: hoveredItemRect.top,
@@ -596,6 +615,12 @@ const GridCanvas: React.FC<GridCanvasProps> = ({
              onMouseLeave={() => {
                  setHoveredColorId(null);
                  setHoveredItemRect(null);
+             }}
+             onWheel={(e) => {
+                 e.stopPropagation();
+                 if (savedColorsListRef.current) {
+                     savedColorsListRef.current.scrollTop += e.deltaY;
+                 }
              }}
           >
               {/* The Color Circle (Replicated) */}
@@ -617,7 +642,7 @@ const GridCanvas: React.FC<GridCanvasProps> = ({
                             {code}
                         </span>
                         <div 
-                            className="ml-3 p-1 rounded-full hover:bg-red-500/20 text-red-500"
+                            className="ml-3 p-1 rounded-full hover:bg-red-500/20 text-red-500 transition-colors"
                             onClick={(e) => {
                                 e.stopPropagation();
                                 removeSavedColor(color.id);
@@ -632,8 +657,9 @@ const GridCanvas: React.FC<GridCanvasProps> = ({
                     </>
                   );
               })()}
-          </div>
+          </motion.div>
       )}
+      </AnimatePresence>
 
     </div>
   );
