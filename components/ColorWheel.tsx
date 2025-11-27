@@ -34,7 +34,7 @@ const ColorWheel: React.FC<ColorWheelProps> = ({
 
     // Limits for tolerance
     const MIN_TOLERANCE = 1;
-    const MAX_TOLERANCE = 365;
+    const MAX_TOLERANCE = 350;
 
     // ---------------- Helpers ----------------
     const getAngle = (clientX: number, clientY: number) => {
