@@ -165,7 +165,7 @@ const GridCanvas: React.FC<GridCanvasProps> = ({
              const DENSITY_SENSITIVITY = 0.05;
              // Expanding fingers (delta > 0) -> finer detail (smaller step)
              // Pinching in (delta < 0) -> coarser detail (larger step)
-             newStep = Math.max(1, Math.min(25, viewState.step - pinchDelta * DENSITY_SENSITIVITY));
+             newStep = Math.max(1, Math.min(25, viewState.step - Math.floor(pinchDelta * DENSITY_SENSITIVITY)));
         } else {
              // Discrete Mouse/Key Logic (Fallback)
              if (newRawScale > viewState.scale) {
@@ -182,7 +182,7 @@ const GridCanvas: React.FC<GridCanvasProps> = ({
             const DENSITY_SENSITIVITY = 0.05;
             // Pinching in (delta < 0) -> coarser detail (larger step)
             // Expanding fingers (delta > 0) -> finer detail (smaller step)
-            newStep = Math.max(1, Math.min(25, viewState.step - pinchDelta * DENSITY_SENSITIVITY));
+            newStep = Math.max(1, Math.min(25, viewState.step - Math.floor(pinchDelta * DENSITY_SENSITIVITY)));
         } else {
             // Discrete Mouse/Key Logic (Fallback)
             if (newRawScale < viewState.scale) {
