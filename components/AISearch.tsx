@@ -166,12 +166,11 @@ const AISearch: React.FC<AISearchProps> = ({ theme, onColorSelect, openSettings 
             )}
 
             <div 
-                className={`absolute bottom-4 left-1/2 -translate-x-1/2 z-50 flex items-center justify-center ${glassPanelClass} rounded-full overflow-hidden transition-all duration-500 cubic-bezier(0.34,1.56,0.64,1)`}
+                className={`absolute bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center justify-center ${glassPanelClass} rounded-full overflow-hidden transition-all duration-500 cubic-bezier(0.34,1.56,0.64,1) h-10 sm:h-14 ${!isExpanded ? 'w-10 sm:w-14' : ''}`}
                 style={{
                     width: isExpanded 
                         ? (showResult ? `${50 + generatedColors.length * 44}px` : 'min(90vw, 400px)') 
-                        : '3.5rem',
-                    height: '3.5rem'
+                        : undefined
                 }}
             >
                 {loading ? (
@@ -181,7 +180,7 @@ const AISearch: React.FC<AISearchProps> = ({ theme, onColorSelect, openSettings 
                         
                         {/* Left Icon / Toggle */}
                         <button
-                            className="absolute left-0 top-0 h-full w-14 flex items-center justify-center cursor-pointer z-10 hover:scale-110 active:scale-90 transition-transform"
+                            className="absolute left-0 top-0 h-full w-10 sm:w-14 flex items-center justify-center cursor-pointer z-10 hover:scale-110 active:scale-90 transition-transform"
                             onClick={(e) => {
                                 e.stopPropagation();
                                 if (!isExpanded) {
@@ -215,7 +214,7 @@ const AISearch: React.FC<AISearchProps> = ({ theme, onColorSelect, openSettings 
 
                         {/* Content Area */}
                         <div 
-                            className={`flex-1 flex items-center h-full transition-opacity duration-300 ${isExpanded ? 'opacity-100 ml-12 pr-2' : 'opacity-0 pointer-events-none'}`}
+                            className={`flex-1 flex items-center h-full transition-opacity duration-300 ${isExpanded ? 'opacity-100 ml-10 sm:ml-14 pr-2' : 'opacity-0 pointer-events-none'}`}
                         >
                             {showResult ? (
                                 /* Color Results */

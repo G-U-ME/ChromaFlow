@@ -30,7 +30,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
         backdrop-blur-xl 
         ${isDark ? 'bg-black/40 border-white/10 text-white' : 'bg-white/60 border-black/5 text-gray-900'}
         border shadow-[0_8px_32px_rgba(0,0,0,0.12)]
-        transition-all duration-500 ease-out
+        transition-all duration-500 cubic-bezier(0.34,1.56,0.64,1)
     `;
 
     // Sync Local State with Current Color
