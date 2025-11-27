@@ -45,7 +45,7 @@ const FloatingUI: React.FC<FloatingUIProps> = ({
 
     const iconButtonClass = `
         w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-full
-        hover:bg-current hover:bg-opacity-10 
+        ${isDark ? 'hover:bg-white/20' : 'hover:bg-black/10'} 
         active:scale-90 transition-transform cursor-pointer select-none
     `;
 
