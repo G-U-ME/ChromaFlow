@@ -150,11 +150,12 @@ const SearchBar: React.FC<SearchBarProps> = ({
 
     // Render Helpers
     const renderRGB = () => (
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-0.5 sm:gap-1 text-sm sm:text-base">
             {[0, 1, 2].map(i => (
                 <React.Fragment key={i}>
                     <input
-                        className={`w-12 bg-transparent text-center outline-none font-mono font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}
+                        className={`bg-transparent text-center outline-none font-mono font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}
+                        style={{ width: `${Math.max(1, rgbValues[i].length)}ch` }}
                         value={rgbValues[i]}
                         onChange={(e) => handleRGBChange(i, e.target.value)}
                         maxLength={3}
@@ -166,25 +167,28 @@ const SearchBar: React.FC<SearchBarProps> = ({
     );
 
     const renderHSL = () => (
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-0.5 sm:gap-1 text-sm sm:text-base">
             <input
-                className={`w-12 bg-transparent text-right outline-none font-mono font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}
+                className={`bg-transparent text-right outline-none font-mono font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}
+                style={{ width: `${Math.max(1, hslValues[0].length)}ch` }}
                 value={hslValues[0]}
                 onChange={(e) => handleHSLChange(0, e.target.value)}
                 maxLength={3}
             />
-            <span className="opacity-50 font-bold mr-1">,</span>
+            <span className="opacity-50 font-bold mr-0.5 sm:mr-1">,</span>
             
             <input
-                className={`w-10 bg-transparent text-right outline-none font-mono font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}
+                className={`bg-transparent text-right outline-none font-mono font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}
+                style={{ width: `${Math.max(1, hslValues[1].length)}ch` }}
                 value={hslValues[1]}
                 onChange={(e) => handleHSLChange(1, e.target.value)}
                 maxLength={3}
             />
-            <span className="opacity-50 font-bold mr-1">%,</span>
+            <span className="opacity-50 font-bold mr-0.5 sm:mr-1">%,</span>
 
             <input
-                className={`w-10 bg-transparent text-right outline-none font-mono font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}
+                className={`bg-transparent text-right outline-none font-mono font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}
+                style={{ width: `${Math.max(1, hslValues[2].length)}ch` }}
                 value={hslValues[2]}
                 onChange={(e) => handleHSLChange(2, e.target.value)}
                 maxLength={3}
@@ -194,13 +198,14 @@ const SearchBar: React.FC<SearchBarProps> = ({
     );
 
     const renderHEX = () => (
-        <div className="flex items-center gap-1">
-            <span className="font-bold opacity-50 mr-1">#</span>
+        <div className="flex items-center gap-0.5 sm:gap-1 text-sm sm:text-base">
+            <span className="font-bold opacity-50 mr-0.5 sm:mr-1">#</span>
             {hexValues.map((char, i) => (
                 <input
                     key={i}
                     ref={el => inputRefs.current[i] = el}
-                    className={`w-6 bg-transparent text-center outline-none font-mono font-bold border-b-2 ${isDark ? 'border-white/20 focus:border-white' : 'border-black/10 focus:border-black'}`}
+                    className={`bg-transparent text-center outline-none font-mono font-bold border-b-2 ${isDark ? 'border-white/20 focus:border-white' : 'border-black/10 focus:border-black'}`}
+                    style={{ width: '1.5ch' }}
                     value={char}
                     onKeyDown={(e) => {
                         // Handle alphanumeric
@@ -220,12 +225,12 @@ const SearchBar: React.FC<SearchBarProps> = ({
 
     return (
         <div 
-            className={`absolute bottom-4 left-4 z-50 flex items-center overflow-hidden ${glassPanelClass} ${isOpen ? 'rounded-2xl pl-3 pr-6 h-14' : 'rounded-full w-14 h-14 justify-center cursor-pointer hover:scale-105'}`}
+            className={`absolute bottom-4 left-4 sm:bottom-6 sm:left-6 z-50 flex items-center overflow-hidden ${glassPanelClass} ${isOpen ? 'rounded-full pl-3 pr-5 sm:pr-6 h-10 sm:h-14' : 'rounded-full w-10 h-10 sm:w-14 sm:h-14 justify-center cursor-pointer hover:scale-105'}`}
             onClick={() => !isOpen && setIsOpen(true)}
             style={{ transitionProperty: 'width, height, border-radius, background-color' }}
         >
              <div 
-                className="flex items-center justify-center flex-shrink-0 w-8 h-8 cursor-pointer"
+                className="flex items-center justify-center flex-shrink-0 w-6 h-6 sm:w-8 sm:h-8 cursor-pointer"
                 onClick={(e) => {
                     if (isOpen) {
                         e.stopPropagation();
@@ -234,7 +239,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
                 }}
              >
                 {/* Magnifying Glass Icon */}
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <svg className="w-4 h-4 sm:w-6 sm:h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <circle cx="11" cy="11" r="8"></circle>
                     <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                 </svg>
