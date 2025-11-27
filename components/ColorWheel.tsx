@@ -236,7 +236,7 @@ const ColorWheel: React.FC<ColorWheelProps> = ({
                         onPointerDown={handlePointerDown}
                         onPointerMove={handlePointerMove}
                         onPointerUp={handlePointerUp}
-                        className="cursor-pointer pointer-events-auto"
+                        className={`cursor-pointer ${isOpen ? 'pointer-events-auto' : 'pointer-events-none'}`}
                     >
                         <foreignObject 
                             x={-R_RING_MAX} 
@@ -300,7 +300,7 @@ const ColorWheel: React.FC<ColorWheelProps> = ({
             {/* 2. HUE STRIP (Vertical, Right) */}
             <div 
                 ref={stripRef}
-                className={`absolute top-0 left-[120px] -translate-y-1/2 h-[220px] w-12 rounded-full py-2 flex flex-col items-center justify-between ${glassCapsuleClass} pointer-events-auto cursor-ns-resize touch-none`}
+                className={`absolute top-0 left-[120px] -translate-y-1/2 h-[220px] w-12 rounded-full py-2 flex flex-col items-center justify-between ${glassCapsuleClass} ${isOpen ? 'pointer-events-auto' : 'pointer-events-none'} cursor-ns-resize touch-none`}
                 onWheel={handleStripWheel}
                 onPointerDown={handleStripPointerDown}
                 onPointerMove={handleStripPointerMove}
@@ -349,7 +349,7 @@ const ColorWheel: React.FC<ColorWheelProps> = ({
             </div>
 
             {/* 4. COLOR CODE CAPSULE (Bottom) */}
-            <div className={`absolute top-[120px] left-0 -translate-x-1/2 px-4 py-2 pointer-events-auto whitespace-nowrap ${glassCapsuleClass}`}>
+            <div className={`absolute top-[120px] left-0 -translate-x-1/2 px-4 py-2 ${isOpen ? 'pointer-events-auto' : 'pointer-events-none'} whitespace-nowrap ${glassCapsuleClass}`}>
                 <span className="font-bold opacity-60">H {Math.round(currentHue)}°</span>
                 <span className="w-px h-4 bg-current opacity-20 mx-3"></span>
                 <span className="font-bold select-all text-center">
