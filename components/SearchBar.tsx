@@ -30,7 +30,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
         backdrop-blur-xl 
         ${isDark ? 'bg-black/40 border-white/10 text-white' : 'bg-white/60 border-black/5 text-gray-900'}
         border shadow-[0_8px_32px_rgba(0,0,0,0.12)]
-        transition-all duration-500 cubic-bezier(0.34,1.56,0.64,1)
+        transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)]
     `;
 
     // Sync Local State with Current Color
@@ -50,6 +50,28 @@ const SearchBar: React.FC<SearchBarProps> = ({
         setHexValues(hex.split(''));
 
     }, [currentColor]);
+
+    const [targetWidth, setTargetWidth] = useState(0);
+    const contentRef = useRef<HTMLDivElement>(null);
+
+    // Measure content width for dynamic sizing
+    useEffect(() => {
+        const updateWidth = () => {
+            if (contentRef.current) {
+                const contentW = contentRef.current.scrollWidth;
+                const isMobile = window.innerWidth < 640;
+                // Base width calculations based on padding/margins/icon sizes:
+                // Mobile: pl-2(8) + pr-5(20) + icon(24) + ml-4(16) = 68px
+                // Desktop: pl-3(12) + pr-6(24) + icon(32) + ml-4(16) = 84px
+                const basePadding = isMobile ? 68 : 84;
+                setTargetWidth(basePadding + contentW);
+            }
+        };
+
+        updateWidth();
+        window.addEventListener('resize', updateWidth);
+        return () => window.removeEventListener('resize', updateWidth);
+    }, [rgbValues, hslValues, hexValues, colorFormat]);
 
     const handleRGBChange = (index: number, valStr: string) => {
         // Regex to allow digits only
@@ -229,9 +251,9 @@ const SearchBar: React.FC<SearchBarProps> = ({
 
     return (
         <div 
-            className={`absolute bottom-4 left-4 sm:bottom-6 sm:left-6 z-50 flex items-center overflow-hidden ${glassPanelClass} ${isOpen ? 'rounded-full pl-2 pr-5 sm:pl-3 pr-6 h-10 sm:h-14' : 'rounded-full w-10 h-10 sm:w-14 sm:h-14 justify-center cursor-pointer hover:scale-105'}`}
+            className={`absolute bottom-4 left-4 sm:bottom-6 sm:left-6 z-50 flex items-center overflow-hidden ${glassPanelClass} rounded-full h-10 sm:h-14 ${isOpen ? 'pl-2 pr-5 sm:pl-3 pr-6 cursor-default' : 'w-10 sm:w-14 justify-center cursor-pointer hover:scale-105'}`}
             onClick={() => !isOpen && setIsOpen(true)}
-            style={{ transitionProperty: 'width, height, border-radius, background-color' }}
+            style={{ width: isOpen ? targetWidth : undefined }}
         >
              <div 
                 className="flex items-center justify-center flex-shrink-0 w-6 h-6 sm:w-8 sm:h-8 cursor-pointer"
@@ -251,7 +273,8 @@ const SearchBar: React.FC<SearchBarProps> = ({
 
              {/* Expanded Content */}
              <div 
-                className={`flex items-center ml-4 transition-all duration-300 ${isOpen ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-10 pointer-events-none absolute'}`}
+                ref={contentRef}
+                className={`flex items-center ml-4 whitespace-nowrap transition-all duration-300 ${isOpen ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-10 pointer-events-none absolute'}`}
              >
                 {colorFormat === 'RGB' && renderRGB()}
                 {colorFormat === 'HSL' && renderHSL()}

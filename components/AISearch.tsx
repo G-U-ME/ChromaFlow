@@ -166,7 +166,7 @@ const AISearch: React.FC<AISearchProps> = ({ theme, onColorSelect, openSettings 
             )}
 
             <div 
-                className={`absolute bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center justify-center ${glassPanelClass} rounded-full overflow-hidden transition-all duration-500 cubic-bezier(0.34,1.56,0.64,1) h-10 sm:h-14 ${!isExpanded ? 'w-10 sm:w-14' : ''}`}
+                className={`absolute bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center justify-center ${glassPanelClass} rounded-full overflow-hidden h-10 sm:h-14 ${!isExpanded ? 'w-10 sm:w-14' : ''}`}
                 style={{
                     width: isExpanded 
                         ? (showResult ? `${50 + generatedColors.length * 44}px` : 'min(90vw, 400px)') 
