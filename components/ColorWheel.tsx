@@ -117,14 +117,24 @@ const ColorWheel: React.FC<ColorWheelProps> = ({
     };
 
     const handleStripPointerDown = (e: React.PointerEvent) => {
+        // Ignore mouse interactions here to allow default click/wheel behavior
+        if (e.pointerType === 'mouse') return;
+
         e.stopPropagation();
-        // Don't prevent default immediately to allow clicks on children, 
-        // but for multi-touch we might need to.
         
         stripPointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
-        (e.currentTarget as Element).setPointerCapture(e.pointerId);
 
+        // Only capture if we have 2 fingers (Start Pinch Mode)
+        // This allows single finger (Click) to work normally without retargeting the event
         if (stripPointers.current.size === 2) {
+            stripPointers.current.forEach((_, id) => {
+                try {
+                    (e.currentTarget as Element).setPointerCapture(id);
+                } catch (err) {
+                    // Ignore capture errors
+                }
+            });
+
             const pts: {x: number, y: number}[] = Array.from(stripPointers.current.values());
             lastStripPinchDist.current = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
             pinchDiffAccumulator.current = 0;
@@ -132,6 +142,7 @@ const ColorWheel: React.FC<ColorWheelProps> = ({
     };
 
     const handleStripPointerMove = (e: React.PointerEvent) => {
+        if (e.pointerType === 'mouse') return;
         if (!stripPointers.current.has(e.pointerId)) return;
         
         stripPointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
@@ -167,8 +178,11 @@ const ColorWheel: React.FC<ColorWheelProps> = ({
     };
 
     const handleStripPointerUp = (e: React.PointerEvent) => {
+        if (e.pointerType === 'mouse') return;
+        
         stripPointers.current.delete(e.pointerId);
-        try { (e.currentTarget as Element).releasePointerCapture(e.pointerId); } catch(err) {}
+        // Capture is released automatically by browser on pointerup, 
+        // but for robustness in multi-touch logic we clean up state.
 
         if (stripPointers.current.size < 2) {
             lastStripPinchDist.current = null;
