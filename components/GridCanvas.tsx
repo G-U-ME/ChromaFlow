@@ -593,7 +593,7 @@ const GridCanvas: React.FC<GridCanvasProps> = ({
       {/* SAVED COLORS LIST */}
       {savedColors.length > 0 && (
           <div 
-            className="absolute left-4 bottom-[4.5rem] sm:left-6 sm:bottom-[6.5rem] z-30 flex flex-col items-start pointer-events-none"
+            className="absolute left-4 bottom-[8.5rem] sm:left-6 sm:bottom-[6.5rem] z-30 flex flex-col items-start pointer-events-none"
           >
              {/* Glass Background Strip - Static Width */}
              <div className={`absolute top-0 left-0 bottom-0 w-[2.5rem] sm:w-[3rem] rounded-[2rem] ${glassPanelClass} pointer-events-auto`} />
@@ -601,7 +601,7 @@ const GridCanvas: React.FC<GridCanvasProps> = ({
              {/* Scroll Container - Expands on Hover to avoid clipping children */}
              <div 
                 ref={savedColorsListRef}
-                className="relative max-h-[50vh] overflow-y-auto overflow-x-visible flex flex-col-reverse items-start py-2 pl-[0.5rem] w-[2.5rem] sm:w-[3rem] scrollbar-hide transition-[width] duration-200 ease-out pointer-events-auto"
+                className="relative max-h-[35vh] sm:max-h-[50vh] overflow-y-auto overflow-x-visible flex flex-col-reverse items-start py-2 pl-[0.5rem] w-[2.5rem] sm:w-[3rem] scrollbar-hide transition-[width] duration-200 ease-out pointer-events-auto"
                 style={{ 
                     width: hoveredColorId ? '16rem' : undefined, // Expand to fit overlay
                     scrollbarWidth: 'none'

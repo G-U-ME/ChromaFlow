@@ -251,7 +251,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
 
     return (
         <div 
-            className={`absolute bottom-4 left-4 sm:bottom-6 sm:left-6 z-50 flex items-center overflow-hidden ${glassPanelClass} rounded-full h-10 sm:h-14 ${isOpen ? 'pl-2 pr-5 sm:pl-3 pr-6 cursor-default' : 'w-10 sm:w-14 justify-center cursor-pointer hover:scale-105'}`}
+            className={`absolute bottom-20 left-4 sm:bottom-6 sm:left-6 z-50 flex items-center overflow-hidden ${glassPanelClass} rounded-full h-10 sm:h-14 ${isOpen ? 'pl-2 pr-5 sm:pl-3 pr-6 cursor-default' : 'w-10 sm:w-14 justify-center cursor-pointer hover:scale-105'}`}
             onClick={() => !isOpen && setIsOpen(true)}
             style={{ width: isOpen ? targetWidth : undefined }}
         >

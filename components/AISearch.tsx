@@ -158,7 +158,7 @@ const AISearch: React.FC<AISearchProps> = ({ theme, onColorSelect, openSettings 
         <>
             {/* Floating Prompt Display (When Loading or Showing Result) */}
             {(loading || showResult) && prompt && (
-                <div className={`absolute bottom-20 sm:bottom-24 left-1/2 -translate-x-1/2 max-w-[90vw] sm:max-w-md z-40 pointer-events-none`}>
+                <div className={`absolute bottom-32 sm:bottom-24 left-1/2 -translate-x-1/2 max-w-[90vw] sm:max-w-md z-40 pointer-events-none`}>
                      <div className={`p-4 rounded-2xl text-sm sm:text-base shadow-xl ${glassPanelClass} pointer-events-auto animate-fade-in-up`}>
                         <p className="line-clamp-4 opacity-90">{prompt}</p>
                      </div>
@@ -166,7 +166,7 @@ const AISearch: React.FC<AISearchProps> = ({ theme, onColorSelect, openSettings 
             )}
 
             <div 
-                className={`absolute bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center justify-center ${glassPanelClass} rounded-full overflow-hidden h-10 sm:h-14 ${!isExpanded ? 'w-10 sm:w-14' : ''}`}
+                className={`absolute bottom-4 sm:bottom-6 left-4 sm:left-1/2 sm:-translate-x-1/2 z-50 flex items-center justify-center ${glassPanelClass} rounded-full overflow-hidden h-10 sm:h-14 ${!isExpanded ? 'w-10 sm:w-14' : ''}`}
                 style={{
                     width: isExpanded 
                         ? (showResult ? `${50 + generatedColors.length * 44}px` : 'min(90vw, 400px)') 
