@@ -59,7 +59,6 @@ const GridCanvas: React.FC<GridCanvasProps> = ({
   const [savedColors, setSavedColors] = useState<SavedColor[]>([]);
   // For Hover Overlay
   const [hoveredColorId, setHoveredColorId] = useState<string | null>(null);
-  const [hoveredItemRect, setHoveredItemRect] = useState<{ top: number, left: number, width: number, height: number } | null>(null);
   
   // Double Click Detection
   const lastClickRef = useRef<{ time: number, c: number, r: number } | null>(null);
@@ -552,114 +551,110 @@ const GridCanvas: React.FC<GridCanvasProps> = ({
       {/* SAVED COLORS LIST */}
       {savedColors.length > 0 && (
           <div 
-            ref={savedColorsListRef}
-            className={`absolute left-4 bottom-[4.5rem] sm:left-6 sm:bottom-[6.5rem] z-30 
-                       flex flex-col-reverse items-center
-                       max-h-[50vh] overflow-y-auto overflow-x-visible
-                       ${glassPanelClass} 
-                       rounded-[2rem] py-2`}
-            style={{ 
-                width: '3rem',
-                scrollbarWidth: 'none' // Hide scrollbar
-            }}
-            onWheel={(e) => e.stopPropagation()}
+            className="absolute left-4 bottom-[4.5rem] sm:left-6 sm:bottom-[6.5rem] z-30 flex flex-col items-start pointer-events-none"
           >
-            <AnimatePresence mode="popLayout">
-              {savedColors.map((color) => {
-                  const hslString = `hsl(${color.h}, ${color.s}%, ${color.l}%)`;
-                  return (
-                      <motion.div
-                        layout
-                        initial={{ opacity: 0, scale: 0 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0 }}
-                        whileHover={{ scale: 1.2 }}
-                        whileTap={{ scale: 0.9 }}
-                        transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-                        key={color.id}
-                        className="w-8 h-8 my-1 rounded-full shadow-sm cursor-pointer flex-shrink-0"
-                        style={{ backgroundColor: hslString, boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}
-                        onMouseEnter={(e) => {
-                            const rect = e.currentTarget.getBoundingClientRect();
-                            setHoveredColorId(color.id);
-                            setHoveredItemRect({ top: rect.top, left: rect.left, width: rect.width, height: rect.height });
-                        }}
-                        onClick={() => selectSavedColor(color)}
-                      />
-                  );
-              })}
-            </AnimatePresence>
+             {/* Glass Background Strip - Static Width */}
+             <div className={`absolute top-0 left-0 bottom-0 w-[3rem] rounded-[2rem] ${glassPanelClass} pointer-events-auto`} />
+
+             {/* Scroll Container - Expands on Hover to avoid clipping children */}
+             <div 
+                ref={savedColorsListRef}
+                className="relative max-h-[50vh] overflow-y-auto overflow-x-visible flex flex-col-reverse items-start py-2 pl-[0.5rem] scrollbar-hide transition-[width] duration-200 ease-out pointer-events-auto"
+                style={{ 
+                    width: hoveredColorId ? '18rem' : '3rem', // Expand to fit overlay
+                    scrollbarWidth: 'none'
+                }}
+                onWheel={(e) => e.stopPropagation()}
+             >
+                <AnimatePresence mode="popLayout">
+                  {savedColors.map((color) => {
+                      const isHovered = hoveredColorId === color.id;
+                      const hslString = `hsl(${color.h}, ${color.s}%, ${color.l}%)`;
+                      
+                      return (
+                          <div 
+                            key={color.id} 
+                            className="relative flex-shrink-0 my-1"
+                            style={{ zIndex: isHovered ? 50 : 1 }}
+                            onMouseEnter={() => setHoveredColorId(color.id)}
+                            onMouseLeave={() => setHoveredColorId(null)}
+                          >
+                              <motion.div
+                                layout
+                                initial={{ opacity: 0, scale: 0 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0 }}
+                                whileHover={{ scale: 1.2 }}
+                                whileTap={{ scale: 0.9 }}
+                                transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+                                className="w-8 h-8 rounded-full shadow-sm cursor-pointer"
+                                style={{ backgroundColor: hslString, boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}
+                                onClick={() => selectSavedColor(color)}
+                              />
+
+                              {/* Overlay - Inside the item now */}
+                              <AnimatePresence>
+                                {isHovered && (
+                                    <motion.div
+                                        initial={{ opacity: 0, scale: 0.8, x: -10 }}
+                                        animate={{ opacity: 1, scale: 1, x: 0 }}
+                                        exit={{ opacity: 0, scale: 0.8, transition: { duration: 0.15 } }}
+                                        transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                                        className="absolute top-0 left-0 z-50 flex items-center rounded-full shadow-lg cursor-pointer"
+                                        style={{
+                                            height: '2rem', // Match circle height (w-8 is 2rem)
+                                            backgroundColor: isDark ? 'rgba(20,20,20,0.9)' : 'rgba(255,255,255,0.9)',
+                                            backdropFilter: 'blur(10px)',
+                                            border: isDark ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.1)',
+                                            paddingLeft: 0,
+                                            paddingRight: 12,
+                                            width: 'max-content' // Allow it to grow
+                                        }}
+                                        onWheel={(e) => {
+                                            // Forward scroll to container manually if needed, 
+                                            // but since it's inside, standard bubbling might work?
+                                            // Actually, if it's inside the scroll container, wheel events bubble up 
+                                            // to the container and it scrolls naturally!
+                                            // So we don't need manual forwarding anymore.
+                                            // But we DO need to stop propagation to prevent ZOOM (Canvas).
+                                            e.stopPropagation(); 
+                                        }}
+                                    >
+                                        <div 
+                                            className="w-8 h-8 rounded-full shadow-sm flex-shrink-0"
+                                            style={{ backgroundColor: hslString }}
+                                            onClick={() => selectSavedColor(color)}
+                                        />
+                                        <span 
+                                            className="ml-3 font-mono text-sm font-bold select-none whitespace-nowrap" 
+                                            style={{ color: theme === 'dark' ? 'white' : 'black' }}
+                                        >
+                                            {formatColor({ h: color.h, s: color.s, l: color.l }, colorFormat)}
+                                        </span>
+                                        <div 
+                                            className="ml-3 p-1 rounded-full hover:bg-red-500/20 text-red-500 transition-colors"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                removeSavedColor(color.id);
+                                            }}
+                                        >
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                                            </svg>
+                                        </div>
+                                    </motion.div>
+                                )}
+                              </AnimatePresence>
+                          </div>
+                      );
+                  })}
+                </AnimatePresence>
+             </div>
           </div>
       )}
 
-      {/* HOVER OVERLAY FOR SAVED COLORS (Outside the scroll container to avoid clipping) */}
-      <AnimatePresence>
-      {hoveredColorId && hoveredItemRect && (
-          <motion.div
-             key={hoveredColorId}
-             initial={{ opacity: 0, scale: 0.8, x: -10 }}
-             animate={{ opacity: 1, scale: 1, x: 0 }}
-             exit={{ opacity: 0, scale: 0.8, transition: { duration: 0.15 } }}
-             transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-             className="absolute z-50 flex items-center rounded-full shadow-lg cursor-pointer"
-             style={{
-                 top: hoveredItemRect.top,
-                 left: hoveredItemRect.left,
-                 height: hoveredItemRect.height,
-                 backgroundColor: isDark ? 'rgba(20,20,20,0.9)' : 'rgba(255,255,255,0.9)',
-                 backdropFilter: 'blur(10px)',
-                 border: isDark ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.1)',
-                 paddingLeft: 0,
-                 paddingRight: 12,
-             }}
-             onMouseLeave={() => {
-                 setHoveredColorId(null);
-                 setHoveredItemRect(null);
-             }}
-             onWheel={(e) => {
-                 e.stopPropagation();
-                 if (savedColorsListRef.current) {
-                     savedColorsListRef.current.scrollTop += e.deltaY;
-                 }
-             }}
-          >
-              {/* The Color Circle (Replicated) */}
-              {(() => {
-                  const color = savedColors.find(c => c.id === hoveredColorId);
-                  if (!color) return null;
-                  const hslString = `hsl(${color.h}, ${color.s}%, ${color.l}%)`;
-                  const code = formatColor({ h: color.h, s: color.s, l: color.l }, colorFormat);
-                  const contrast = theme === 'dark' ? 'white' : 'black';
-
-                  return (
-                    <>
-                        <div 
-                            className="w-8 h-8 rounded-full shadow-sm flex-shrink-0"
-                            style={{ backgroundColor: hslString }}
-                            onClick={() => selectSavedColor(color)}
-                        />
-                        <span className="ml-3 font-mono text-sm font-bold select-none whitespace-nowrap" style={{ color: contrast }}>
-                            {code}
-                        </span>
-                        <div 
-                            className="ml-3 p-1 rounded-full hover:bg-red-500/20 text-red-500 transition-colors"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                removeSavedColor(color.id);
-                            }}
-                        >
-                            {/* Small X Icon */}
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                                <line x1="18" y1="6" x2="6" y2="18"></line>
-                                <line x1="6" y1="6" x2="18" y2="18"></line>
-                            </svg>
-                        </div>
-                    </>
-                  );
-              })()}
-          </motion.div>
-      )}
-      </AnimatePresence>
+      {/* REMOVED OLD HOVER OVERLAY */}
 
     </div>
   );
