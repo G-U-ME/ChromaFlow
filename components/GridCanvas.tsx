@@ -162,10 +162,10 @@ const GridCanvas: React.FC<GridCanvasProps> = ({
              // Continuous Touch Logic for Density (Tolerance)
              // When screen > 120% continue double finger enlarge (pinchDelta > 0), 
              // Density size will be real-time change.
-             const DENSITY_SENSITIVITY = 0.05;
+             const DENSITY_SENSITIVITY = 0.1;
              // Expanding fingers (delta > 0) -> finer detail (smaller step)
              // Pinching in (delta < 0) -> coarser detail (larger step)
-             newStep = Math.max(1, Math.min(25, viewState.step - Math.floor(pinchDelta * DENSITY_SENSITIVITY)));
+             newStep = Math.max(1, Math.min(25, viewState.step - Math.round(pinchDelta * DENSITY_SENSITIVITY)));
         } else {
              // Discrete Mouse/Key Logic (Fallback)
              if (newRawScale > viewState.scale) {
@@ -179,10 +179,10 @@ const GridCanvas: React.FC<GridCanvasProps> = ({
             // Continuous Touch Logic for Density (Tolerance)
             // When screen < 80% continue double finger pinch (pinchDelta < 0), 
             // Density size will be real-time change.
-            const DENSITY_SENSITIVITY = 0.05;
+            const DENSITY_SENSITIVITY = 0.1;
             // Pinching in (delta < 0) -> coarser detail (larger step)
             // Expanding fingers (delta > 0) -> finer detail (smaller step)
-            newStep = Math.max(1, Math.min(25, viewState.step - Math.floor(pinchDelta * DENSITY_SENSITIVITY)));
+            newStep = Math.max(1, Math.min(25, viewState.step - Math.round(pinchDelta * DENSITY_SENSITIVITY)));
         } else {
             // Discrete Mouse/Key Logic (Fallback)
             if (newRawScale < viewState.scale) {
