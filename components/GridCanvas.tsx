@@ -23,6 +23,11 @@ const GAP = 10;
 const CELL_W = RECT_WIDTH + GAP;
 const CELL_H = RECT_HEIGHT + GAP;
 
+interface SavedColor extends HSL {
+    id: string;
+    timestamp: number;
+}
+
 const GridCanvas: React.FC<GridCanvasProps> = ({
   viewState,
   setViewState,
@@ -48,6 +53,15 @@ const GridCanvas: React.FC<GridCanvasProps> = ({
   const [gridOrigin, setGridOrigin] = useState<{ l: number, s: number }>({ l: 50, s: 50 });
   // Store visible color codes as strings "L_S"
   const [visibleColorCodes, setVisibleColorCodes] = useState<Set<string>>(new Set());
+
+  // --- SAVED COLORS STATE ---
+  const [savedColors, setSavedColors] = useState<SavedColor[]>([]);
+  // For Hover Overlay
+  const [hoveredColorId, setHoveredColorId] = useState<string | null>(null);
+  const [hoveredItemRect, setHoveredItemRect] = useState<{ top: number, left: number, width: number, height: number } | null>(null);
+  
+  // Double Click Detection
+  const lastClickRef = useRef<{ time: number, c: number, r: number } | null>(null);
 
   const prevStepRef = useRef(viewState.step);
 
@@ -112,6 +126,15 @@ const GridCanvas: React.FC<GridCanvasProps> = ({
   // Background color based on theme
   const bgColor = theme === 'dark' ? 'rgb(16, 16, 16)' : 'rgb(232, 231, 229)';
   const labelColor = theme === 'dark' ? 'rgb(232, 231, 229)' : 'rgb(16, 16, 16)';
+  const isDark = theme === 'dark';
+
+  // Glassmorphism styles
+  const glassPanelClass = `
+    backdrop-blur-xl 
+    ${isDark ? 'bg-black/40 border-white/10 text-white' : 'bg-white/60 border-black/5 text-gray-900'}
+    border shadow-[0_8px_32px_rgba(0,0,0,0.12)]
+    transition-all duration-300 ease-out
+  `;
 
   // VIRTUALIZATION LOGIC
   const visibleItems = useMemo(() => {
@@ -296,6 +319,32 @@ const GridCanvas: React.FC<GridCanvasProps> = ({
   };
 
   const handleCellClick = (c: number, r: number, l: number, s: number) => {
+      const now = Date.now();
+      
+      // Check Double Click
+      if (lastClickRef.current && 
+          lastClickRef.current.c === c && 
+          lastClickRef.current.r === r && 
+          (now - lastClickRef.current.time) < 300) {
+          
+          // DOUBLE CLICK Detected -> Save Color
+          const newColor: SavedColor = { h: hue, s, l, id: Date.now().toString(), timestamp: now };
+          // Add to saved colors (deduplicate by value approx if needed, but ID is unique)
+          setSavedColors(prev => {
+             // Avoid exact duplicates if desired, or just allow multiple.
+             // "New collected colors will be added above" -> Just prepend or append depending on rendering
+             // We append, and render in reverse order to stack up.
+             return [...prev, newColor];
+          });
+          
+          // Reset double click tracker to avoid triple click triggers
+          lastClickRef.current = null;
+          return;
+      }
+      
+      // Record for Double Click
+      lastClickRef.current = { time: now, c, r };
+
       // 1. Update Selection
       setSelectedCell({ c, r });
       
@@ -314,6 +363,22 @@ const GridCanvas: React.FC<GridCanvasProps> = ({
           }
           return next;
       });
+  };
+  
+  const removeSavedColor = (id: string) => {
+      setSavedColors(prev => prev.filter(c => c.id !== id));
+      if (hoveredColorId === id) {
+          setHoveredColorId(null);
+          setHoveredItemRect(null);
+      }
+  };
+  
+  const selectSavedColor = (color: SavedColor) => {
+      // Jump to this color
+      // We mimic the logic in useEffect([selectedColor]), but here we trigger it explicitly 
+      // and also maybe we want to ensure it becomes the "selected cell".
+      // The existing useEffect([selectedColor]) will handle the "jump" when we call onColorSelect
+      onColorSelect({ h: color.h, s: color.s, l: color.l });
   };
 
   const triggerSnap = () => {
@@ -481,6 +546,95 @@ const GridCanvas: React.FC<GridCanvasProps> = ({
             );
         })}
       </div>
+
+      {/* SAVED COLORS LIST */}
+      {savedColors.length > 0 && (
+          <div 
+            className={`absolute left-4 bottom-[4.5rem] sm:left-6 sm:bottom-[6.5rem] z-30 
+                       flex flex-col-reverse items-center
+                       max-h-[50vh] overflow-y-auto overflow-x-visible
+                       ${glassPanelClass} 
+                       rounded-[2rem] py-2`}
+            style={{ 
+                width: '3rem',
+                scrollbarWidth: 'none' // Hide scrollbar
+            }}
+          >
+              {savedColors.map((color) => {
+                  const hslString = `hsl(${color.h}, ${color.s}%, ${color.l}%)`;
+                  return (
+                      <div
+                        key={color.id}
+                        className="w-8 h-8 my-1 rounded-full shadow-sm cursor-pointer flex-shrink-0 transition-all hover:scale-110"
+                        style={{ backgroundColor: hslString, boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}
+                        onMouseEnter={(e) => {
+                            const rect = e.currentTarget.getBoundingClientRect();
+                            setHoveredColorId(color.id);
+                            setHoveredItemRect({ top: rect.top, left: rect.left, width: rect.width, height: rect.height });
+                        }}
+                        onClick={() => selectSavedColor(color)}
+                      />
+                  );
+              })}
+          </div>
+      )}
+
+      {/* HOVER OVERLAY FOR SAVED COLORS (Outside the scroll container to avoid clipping) */}
+      {hoveredColorId && hoveredItemRect && (
+          <div
+             className="absolute z-50 flex items-center rounded-full shadow-lg cursor-pointer"
+             style={{
+                 top: hoveredItemRect.top,
+                 left: hoveredItemRect.left,
+                 height: hoveredItemRect.height,
+                 backgroundColor: isDark ? 'rgba(20,20,20,0.9)' : 'rgba(255,255,255,0.9)',
+                 backdropFilter: 'blur(10px)',
+                 border: isDark ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.1)',
+                 paddingLeft: 0,
+                 paddingRight: 12,
+             }}
+             onMouseLeave={() => {
+                 setHoveredColorId(null);
+                 setHoveredItemRect(null);
+             }}
+          >
+              {/* The Color Circle (Replicated) */}
+              {(() => {
+                  const color = savedColors.find(c => c.id === hoveredColorId);
+                  if (!color) return null;
+                  const hslString = `hsl(${color.h}, ${color.s}%, ${color.l}%)`;
+                  const code = formatColor({ h: color.h, s: color.s, l: color.l }, colorFormat);
+                  const contrast = theme === 'dark' ? 'white' : 'black';
+
+                  return (
+                    <>
+                        <div 
+                            className="w-8 h-8 rounded-full shadow-sm flex-shrink-0"
+                            style={{ backgroundColor: hslString }}
+                            onClick={() => selectSavedColor(color)}
+                        />
+                        <span className="ml-3 font-mono text-sm font-bold select-none whitespace-nowrap" style={{ color: contrast }}>
+                            {code}
+                        </span>
+                        <div 
+                            className="ml-3 p-1 rounded-full hover:bg-red-500/20 text-red-500"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                removeSavedColor(color.id);
+                            }}
+                        >
+                            {/* Small X Icon */}
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                        </div>
+                    </>
+                  );
+              })()}
+          </div>
+      )}
+
     </div>
   );
 };
