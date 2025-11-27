@@ -169,7 +169,7 @@ const AISearch: React.FC<AISearchProps> = ({ theme, onColorSelect, openSettings 
                 className={`absolute bottom-4 left-1/2 -translate-x-1/2 z-50 flex items-center justify-center ${glassPanelClass} rounded-full overflow-hidden transition-all duration-500 cubic-bezier(0.34,1.56,0.64,1)`}
                 style={{
                     width: isExpanded 
-                        ? (showResult ? `${70 + generatedColors.length * 48}px` : 'min(90vw, 400px)') 
+                        ? (showResult ? `${50 + generatedColors.length * 44}px` : 'min(90vw, 400px)') 
                         : '3.5rem',
                     height: '3.5rem'
                 }}
