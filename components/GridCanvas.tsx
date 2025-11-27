@@ -56,7 +56,50 @@ const GridCanvas: React.FC<GridCanvasProps> = ({
   const [visibleColorCodes, setVisibleColorCodes] = useState<Set<string>>(new Set());
 
   // --- SAVED COLORS STATE ---
-  const [savedColors, setSavedColors] = useState<SavedColor[]>([]);
+  const [savedColors, setSavedColors] = useState<SavedColor[]>(() => {
+    try {
+      const saved = localStorage.getItem('chromaflow-saved-colors');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      console.warn('Failed to load saved colors', e);
+      return [];
+    }
+  });
+
+  useEffect(() => {
+    localStorage.setItem('chromaflow-saved-colors', JSON.stringify(savedColors));
+  }, [savedColors]);
+
+  // --- PERSIST SELECTED COLOR ---
+  const isFirstRender = useRef(true);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('chromaflow-selected-color');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (
+          parsed &&
+          typeof parsed.h === 'number' &&
+          typeof parsed.s === 'number' &&
+          typeof parsed.l === 'number'
+        ) {
+          onColorSelect(parsed);
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to load selected color', e);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    localStorage.setItem('chromaflow-selected-color', JSON.stringify(selectedColor));
+  }, [selectedColor]);
+
   // For Hover Overlay
   const [hoveredColorId, setHoveredColorId] = useState<string | null>(null);
   
