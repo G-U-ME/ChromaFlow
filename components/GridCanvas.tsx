@@ -175,9 +175,19 @@ const GridCanvas: React.FC<GridCanvasProps> = ({
         
     } else if (newScale < 0.8) {
         newScale = 0.8; 
-        if (newRawScale < viewState.scale) {
-             // Discrete logic for zooming out for now, unless requested otherwise
-             newStep = Math.min(25, viewState.step + 1); 
+        if (pinchDelta !== 0) {
+            // Continuous Touch Logic for Density (Tolerance)
+            // When screen < 80% continue double finger pinch (pinchDelta < 0), 
+            // Density size will be real-time change.
+            const DENSITY_SENSITIVITY = 0.05;
+            // Pinching in (delta < 0) -> coarser detail (larger step)
+            // Expanding fingers (delta > 0) -> finer detail (smaller step)
+            newStep = Math.max(0.1, Math.min(25, viewState.step - pinchDelta * DENSITY_SENSITIVITY));
+        } else {
+            // Discrete Mouse/Key Logic (Fallback)
+            if (newRawScale < viewState.scale) {
+                 newStep = Math.min(25, viewState.step + 1); 
+            }
         }
     }
 
