@@ -32,6 +32,11 @@ const ColorWheel: React.FC<ColorWheelProps> = ({
     const centerRef = useRef<{x: number, y: number}>({x: 0, y: 0});
     const stripRef = useRef<HTMLDivElement>(null);
 
+    // Ref for multi-touch on strip
+    const stripPointers = useRef<Map<number, {x: number, y: number}>>(new Map());
+    const lastStripPinchDist = useRef<number | null>(null);
+    const pinchDiffAccumulator = useRef<number>(0); // To dampen sensitivity
+
     // Limits for tolerance
     const MIN_TOLERANCE = 1;
     const MAX_TOLERANCE = 350;
@@ -109,6 +114,66 @@ const ColorWheel: React.FC<ColorWheelProps> = ({
             const next = prev + delta;
             return Math.max(MIN_TOLERANCE, Math.min(MAX_TOLERANCE, next));
         });
+    };
+
+    const handleStripPointerDown = (e: React.PointerEvent) => {
+        e.stopPropagation();
+        // Don't prevent default immediately to allow clicks on children, 
+        // but for multi-touch we might need to.
+        
+        stripPointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+        (e.currentTarget as Element).setPointerCapture(e.pointerId);
+
+        if (stripPointers.current.size === 2) {
+            const pts: {x: number, y: number}[] = Array.from(stripPointers.current.values());
+            lastStripPinchDist.current = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+            pinchDiffAccumulator.current = 0;
+        }
+    };
+
+    const handleStripPointerMove = (e: React.PointerEvent) => {
+        if (!stripPointers.current.has(e.pointerId)) return;
+        
+        stripPointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+        if (stripPointers.current.size === 2) {
+            e.preventDefault(); // Prevent page scroll when pinching
+            const pts: {x: number, y: number}[] = Array.from(stripPointers.current.values());
+            const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+
+            if (lastStripPinchDist.current !== null) {
+                const diff = dist - lastStripPinchDist.current;
+                pinchDiffAccumulator.current += diff;
+
+                // Threshold to change tolerance (sensitivity)
+                const THRESHOLD = 10; 
+                
+                if (Math.abs(pinchDiffAccumulator.current) > THRESHOLD) {
+                    const steps = Math.floor(pinchDiffAccumulator.current / THRESHOLD);
+                    if (steps !== 0) {
+                        setTolerance(prev => {
+                            // Pinch Out (positive diff) -> Zoom In -> Decrease Tolerance
+                            // Pinch In (negative diff) -> Zoom Out -> Increase Tolerance
+                            // So we subtract steps (because positive steps should decrease tolerance)
+                            const next = prev - steps;
+                            return Math.max(MIN_TOLERANCE, Math.min(MAX_TOLERANCE, next));
+                        });
+                        pinchDiffAccumulator.current -= steps * THRESHOLD;
+                    }
+                }
+            }
+            lastStripPinchDist.current = dist;
+        }
+    };
+
+    const handleStripPointerUp = (e: React.PointerEvent) => {
+        stripPointers.current.delete(e.pointerId);
+        try { (e.currentTarget as Element).releasePointerCapture(e.pointerId); } catch(err) {}
+
+        if (stripPointers.current.size < 2) {
+            lastStripPinchDist.current = null;
+            pinchDiffAccumulator.current = 0;
+        }
     };
 
     const handleHueClick = (offsetIndex: number) => {
@@ -221,8 +286,13 @@ const ColorWheel: React.FC<ColorWheelProps> = ({
             {/* 2. HUE STRIP (Vertical, Right) */}
             <div 
                 ref={stripRef}
-                className={`absolute top-0 left-[120px] -translate-y-1/2 h-[220px] w-12 rounded-full py-2 flex flex-col items-center justify-between ${glassCapsuleClass} pointer-events-auto cursor-ns-resize`}
+                className={`absolute top-0 left-[120px] -translate-y-1/2 h-[220px] w-12 rounded-full py-2 flex flex-col items-center justify-between ${glassCapsuleClass} pointer-events-auto cursor-ns-resize touch-none`}
                 onWheel={handleStripWheel}
+                onPointerDown={handleStripPointerDown}
+                onPointerMove={handleStripPointerMove}
+                onPointerUp={handleStripPointerUp}
+                onPointerCancel={handleStripPointerUp}
+                onPointerLeave={handleStripPointerUp}
                 title="Scroll to adjust density"
             >
                 {hueStripItems.map((item) => {
