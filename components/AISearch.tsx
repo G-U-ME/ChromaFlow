@@ -29,7 +29,7 @@ const AISearch: React.FC<AISearchProps> = ({ theme, onColorSelect, openSettings 
     const handleSend = async () => {
         if (!prompt.trim()) return;
 
-        const apiKey = localStorage.getItem('GEMINI_API_KEY');
+        const apiKey = localStorage.getItem('GEMINI_API_KEY') || process.env.GEMINI_API_KEY;
         if (!apiKey) {
             openSettings();
             return;
