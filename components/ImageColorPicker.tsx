@@ -204,7 +204,7 @@ const ImageColorPicker: React.FC<ImageColorPickerProps> = ({ theme, onColorSelec
             <motion.div 
                 layout
                 className={`pointer-events-auto flex items-center ${glassPanelClass} rounded-full h-10 sm:h-14 overflow-hidden
-                            ${showResult ? 'pl-2 pr-2' : 'w-10 sm:w-14 justify-center hover:scale-105 cursor-pointer'}`}
+                            ${showResult ? 'pl-1 pr-2 sm:pl-2' : 'w-10 sm:w-14 justify-center hover:scale-105 cursor-pointer'}`}
                 onClick={(e) => {
                     if (!showResult) handleButtonClick();
                 }}
