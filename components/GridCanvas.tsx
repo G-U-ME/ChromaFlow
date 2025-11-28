@@ -54,6 +54,7 @@ const GridCanvas: React.FC<GridCanvasProps> = ({
   const [gridOrigin, setGridOrigin] = useState<{ l: number, s: number }>({ l: 50, s: 50 });
   // Store visible color codes as strings "L_S"
   const [visibleColorCodes, setVisibleColorCodes] = useState<Set<string>>(new Set());
+  const [isListHovered, setIsListHovered] = useState(false);
 
   // --- SAVED COLORS STATE ---
   const [savedColors, setSavedColors] = useState<SavedColor[]>(() => {
@@ -596,20 +597,24 @@ const GridCanvas: React.FC<GridCanvasProps> = ({
             className="absolute left-4 bottom-[7.5rem] sm:left-6 sm:bottom-[6.5rem] z-30 flex flex-col items-start pointer-events-none"
           >
              {/* Scroll Container - Now also handles the capsule shape and background */}
-             <div 
+             <motion.div 
                 ref={savedColorsListRef}
-                className={`relative max-h-[35vh] sm:max-h-[50vh] overflow-y-auto flex flex-col-reverse items-start py-2 pl-[0.5rem] w-[2.5rem] sm:w-[3rem] scrollbar-hide transition-[width] duration-200 ease-out pointer-events-auto rounded-[2rem] ${glassPanelClass}
-                    ${hoveredColorId ? 'overflow-x-visible' : 'overflow-x-hidden'}
-                `}
+                initial={false}
+                animate={{ 
+                    width: isListHovered ? 'auto' : (viewportSize.w < 640 ? '2.5rem' : '3rem')
+                }}
+                className={`relative max-h-[35vh] sm:max-h-[50vh] overflow-y-auto flex flex-col-reverse items-start py-2 pl-[0.5rem] scrollbar-hide pointer-events-auto rounded-[2rem] ${glassPanelClass} overflow-x-hidden`}
                 style={{ 
-                    width: hoveredColorId ? '16rem' : undefined, // Expand to fit overlay
                     scrollbarWidth: 'none'
                 }}
+                onMouseEnter={() => setIsListHovered(true)}
+                onMouseLeave={() => setIsListHovered(false)}
                 onWheel={(e) => e.stopPropagation()}
+                onPointerDown={(e) => e.stopPropagation()}
              >
                 <AnimatePresence mode="popLayout">
                   {savedColors.map((color) => {
-                      const isHovered = hoveredColorId === color.id;
+                      const isItemHovered = hoveredColorId === color.id;
                       const hslString = `hsl(${color.h}, ${color.s}%, ${color.l}%)`;
                       const isMobile = viewportSize.w < 640;
                       const sizeStr = isMobile ? '1.5rem' : '2rem'; // 24px vs 32px
@@ -623,8 +628,7 @@ const GridCanvas: React.FC<GridCanvasProps> = ({
                             key={color.id} 
                             className="relative flex-shrink-0 my-1"
                             style={{ 
-                                zIndex: isHovered ? 50 : 1,
-                                width: '100%', // Fill the container (which expands on hover)
+                                zIndex: isItemHovered ? 50 : 1,
                                 height: sizeStr
                             }}
                             onMouseEnter={() => setHoveredColorId(color.id)}
@@ -632,11 +636,12 @@ const GridCanvas: React.FC<GridCanvasProps> = ({
                           >
                               <motion.div
                                 layout
-                                className={`flex items-center overflow-hidden rounded-full cursor-pointer transition-colors duration-200`}
+                                className={`flex items-center overflow-hidden rounded-full cursor-pointer transition-all duration-200`}
                                 style={{
-                                    backgroundColor: isHovered 
+                                    backgroundColor: isItemHovered 
                                         ? (isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)') 
                                         : 'transparent',
+                                    filter: isItemHovered ? 'brightness(1.2)' : 'none',
                                     height: '100%',
                                     width: 'max-content' // Allow it to grow based on content
                                 }}
@@ -654,7 +659,7 @@ const GridCanvas: React.FC<GridCanvasProps> = ({
                                   />
 
                                   <AnimatePresence>
-                                    {isHovered && (
+                                    {isListHovered && (
                                         <motion.div
                                             initial={{ opacity: 0, width: 0 }}
                                             animate={{ opacity: 1, width: 'auto' }}
@@ -687,7 +692,7 @@ const GridCanvas: React.FC<GridCanvasProps> = ({
                       );
                   })}
                 </AnimatePresence>
-             </div>
+             </motion.div>
           </div>
       )}
 
