@@ -62,12 +62,21 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, theme })
         defaultValue: number
     ) => {
         const percent = ((defaultValue - min) / (max - min)) * 100;
+        // Correction for thumb width (approx 16px)
+        // At 0%, thumb center is at ~8px. At 100%, at ~width-8px.
+        // Default calculation places at 0px and width.
+        // Offset needed: (50 - percent) * (16 / 100) roughly?
+        // Correct math: center = percent% of (width - thumb) + thumb/2
+        // Map 0..1 to 8px..width-8px.
+        // We'll use a pixel offset approximation: (0.5 - percent/100) * 16px
+        const offset = (0.5 - percent / 100) * 16;
+
         return (
             <div className="flex items-center gap-3">
-                <div className="relative flex-grow h-6 flex items-center">
+                <div className="relative flex-grow h-8 flex items-center">
                     <input 
                         type="range" min={min} max={max} step="1"
-                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700 z-10 relative bg-transparent"
+                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700 z-10 relative bg-transparent accent-indigo-500"
                         style={{
                             background: `linear-gradient(to right, ${isDark ? '#4f46e5' : '#6366f1'} 0%, ${isDark ? '#374151' : '#e5e7eb'} 0%)`
                         }}
@@ -76,8 +85,12 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, theme })
                     />
                     {/* Default Marker */}
                     <div 
-                        className="absolute top-1/2 -translate-y-1/2 w-0.5 h-4 bg-red-500/50 pointer-events-none z-0"
-                        style={{ left: `${percent}%` }}
+                        className="absolute top-1/2 -translate-y-1/2 w-0.5 h-4 bg-indigo-500 rounded-full pointer-events-none z-20 shadow-[0_0_4px_rgba(99,102,241,0.5)] transition-all duration-300"
+                        style={{ 
+                            left: `${percent}%`, 
+                            marginLeft: `${offset}px`,
+                            transform: 'translateX(-50%) translateY(-50%)' 
+                        }}
                         title={`Default: ${defaultValue}`}
                     />
                 </div>
