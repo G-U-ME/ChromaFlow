@@ -138,22 +138,6 @@ const AISearch: React.FC<AISearchProps> = ({ theme, onColorSelect, openSettings 
         }
     };
 
-    // Determine width based on state
-    // Circle: w-12 or w-14
-    // Input Expanded: w-[300px] to w-[500px]
-    // Result Expanded: depends on color count. Approx 40px per color + padding.
-    
-    let containerWidth = 'w-12 h-12 sm:w-14 sm:h-14'; // Default Circle
-    if (isExpanded) {
-        if (showResult) {
-            // Base padding + icon (40) + colors * 40 + extra
-            const width = 60 + (generatedColors.length * 44); 
-            containerWidth = `w-[${width}px] h-12 sm:h-14`;
-        } else {
-            containerWidth = 'w-[320px] sm:w-[400px] h-12 sm:h-14';
-        }
-    }
-
     return (
         <>
             {/* Floating Prompt Display (When Loading or Showing Result) */}
@@ -169,7 +153,7 @@ const AISearch: React.FC<AISearchProps> = ({ theme, onColorSelect, openSettings 
                 className={`absolute bottom-4 sm:bottom-6 left-4 sm:left-1/2 sm:-translate-x-1/2 z-50 flex items-center justify-center ${glassPanelClass} rounded-full h-10 sm:h-14 ${!isExpanded ? 'w-10 sm:w-14' : ''}`}
                 style={{
                     width: isExpanded 
-                        ? (showResult ? `${50 + generatedColors.length * 44}px` : 'min(90vw, 400px)') 
+                        ? (showResult ? 'fit-content' : 'min(90vw, 400px)') 
                         : undefined
                 }}
             >
