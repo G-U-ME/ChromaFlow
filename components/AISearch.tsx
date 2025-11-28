@@ -166,7 +166,7 @@ const AISearch: React.FC<AISearchProps> = ({ theme, onColorSelect, openSettings 
             )}
 
             <div 
-                className={`absolute bottom-4 sm:bottom-6 left-4 sm:left-1/2 sm:-translate-x-1/2 z-50 flex items-center justify-center ${glassPanelClass} rounded-full overflow-hidden h-10 sm:h-14 ${!isExpanded ? 'w-10 sm:w-14' : ''}`}
+                className={`absolute bottom-4 sm:bottom-6 left-4 sm:left-1/2 sm:-translate-x-1/2 z-50 flex items-center justify-center ${glassPanelClass} rounded-full h-10 sm:h-14 ${!isExpanded ? 'w-10 sm:w-14' : ''}`}
                 style={{
                     width: isExpanded 
                         ? (showResult ? `${50 + generatedColors.length * 44}px` : 'min(90vw, 400px)') 
@@ -218,7 +218,7 @@ const AISearch: React.FC<AISearchProps> = ({ theme, onColorSelect, openSettings 
                         >
                             {showResult ? (
                                 /* Color Results */
-                                <div className="flex items-center gap-2 sm:gap-3 overflow-x-auto scrollbar-hide pr-2">
+                                <div className="flex items-center gap-2 sm:gap-3 pr-2">
                                     {generatedColors.map((color, idx) => (
                                         <button
                                             key={idx}
