@@ -611,6 +611,8 @@ const GridCanvas: React.FC<GridCanvasProps> = ({
                   {savedColors.map((color) => {
                       const isHovered = hoveredColorId === color.id;
                       const hslString = `hsl(${color.h}, ${color.s}%, ${color.l}%)`;
+                      const isMobile = viewportSize.w < 640;
+                      const sizeStr = isMobile ? '1.5rem' : '2rem'; // 24px vs 32px
                       
                       return (
                           <motion.div 
@@ -620,65 +622,67 @@ const GridCanvas: React.FC<GridCanvasProps> = ({
                             exit={{ opacity: 0, scale: 0, transition: { duration: 0 } }}
                             key={color.id} 
                             className="relative flex-shrink-0 my-1"
-                            style={{ zIndex: isHovered ? 50 : 1 }}
+                            style={{ 
+                                zIndex: isHovered ? 50 : 1,
+                                width: '100%', // Fill the container (which expands on hover)
+                                height: sizeStr
+                            }}
                             onMouseEnter={() => setHoveredColorId(color.id)}
                             onMouseLeave={() => setHoveredColorId(null)}
                           >
                               <motion.div
-                                whileHover={{ scale: 1.2 }}
-                                whileTap={{ scale: 0.9 }}
-                                className="w-6 h-6 sm:w-8 sm:h-8 rounded-full shadow-sm cursor-pointer"
-                                style={{ backgroundColor: hslString, boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}
+                                layout
+                                className={`flex items-center overflow-hidden rounded-full cursor-pointer transition-colors duration-200`}
+                                style={{
+                                    backgroundColor: isHovered 
+                                        ? (isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)') 
+                                        : 'transparent',
+                                    height: '100%',
+                                    width: 'max-content' // Allow it to grow based on content
+                                }}
                                 onClick={() => selectSavedColor(color)}
-                              />
+                              >
+                                  <motion.div
+                                    layout
+                                    className="rounded-full shadow-sm flex-shrink-0"
+                                    style={{ 
+                                        backgroundColor: hslString, 
+                                        width: sizeStr,
+                                        height: sizeStr,
+                                        boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                                    }}
+                                  />
 
-                              {/* Overlay - Inside the item now */}
-                              <AnimatePresence>
-                                {isHovered && (
-                                    <motion.div
-                                        initial={{ opacity: 0, scale: 0.8, x: -10 }}
-                                        animate={{ opacity: 1, scale: 1, x: 0 }}
-                                        exit={{ opacity: 0, scale: 0.8, transition: { duration: 0.15 } }}
-                                        transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                                        className="absolute top-0 left-0 z-50 flex items-center rounded-full shadow-lg cursor-pointer h-6 sm:h-8"
-                                        style={{
-                                            backgroundColor: isDark ? 'rgba(20,20,20,0.9)' : 'rgba(255,255,255,0.9)',
-                                            backdropFilter: 'blur(10px)',
-                                            border: isDark ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.1)',
-                                            paddingLeft: 0,
-                                            paddingRight: 12,
-                                            width: 'max-content' // Allow it to grow
-                                        }}
-                                        onWheel={(e) => {
-                                            e.stopPropagation(); 
-                                        }}
-                                    >
-                                        <div 
-                                            className="w-6 h-6 sm:w-8 sm:h-8 rounded-full shadow-sm flex-shrink-0"
-                                            style={{ backgroundColor: hslString }}
-                                            onClick={() => selectSavedColor(color)}
-                                        />
-                                        <span 
-                                            className="ml-3 font-mono text-sm font-bold select-none whitespace-nowrap" 
-                                            style={{ color: theme === 'dark' ? 'white' : 'black' }}
+                                  <AnimatePresence>
+                                    {isHovered && (
+                                        <motion.div
+                                            initial={{ opacity: 0, width: 0 }}
+                                            animate={{ opacity: 1, width: 'auto' }}
+                                            exit={{ opacity: 0, width: 0 }}
+                                            className="flex items-center pl-3 pr-2 whitespace-nowrap overflow-hidden"
                                         >
-                                            {formatColor({ h: color.h, s: color.s, l: color.l }, colorFormat)}
-                                        </span>
-                                        <div 
-                                            className="ml-3 p-1 rounded-full hover:bg-red-500/20 text-red-500 transition-colors"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                removeSavedColor(color.id);
-                                            }}
-                                        >
-                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                                                <line x1="18" y1="6" x2="6" y2="18"></line>
-                                                <line x1="6" y1="6" x2="18" y2="18"></line>
-                                            </svg>
-                                        </div>
-                                    </motion.div>
-                                )}
-                              </AnimatePresence>
+                                            <span 
+                                                className="font-mono text-sm font-bold select-none" 
+                                                style={{ color: theme === 'dark' ? 'white' : 'black' }}
+                                            >
+                                                {formatColor({ h: color.h, s: color.s, l: color.l }, colorFormat)}
+                                            </span>
+                                            <div 
+                                                className="ml-3 p-1 rounded-full hover:bg-red-500/20 text-red-500 transition-colors"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    removeSavedColor(color.id);
+                                                }}
+                                            >
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                                </svg>
+                                            </div>
+                                        </motion.div>
+                                    )}
+                                  </AnimatePresence>
+                              </motion.div>
                           </motion.div>
                       );
                   })}
