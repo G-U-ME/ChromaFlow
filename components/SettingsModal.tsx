@@ -9,16 +9,31 @@ interface SettingsModalProps {
 
 const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, theme }) => {
     const [apiKey, setApiKey] = useState('');
+    const [sampleStep, setSampleStep] = useState(10);
+    const [quantizationFactor, setQuantizationFactor] = useState(24);
+    const [minRedmeanDistance, setMinRedmeanDistance] = useState(50);
     
     useEffect(() => {
         const storedKey = localStorage.getItem('GEMINI_API_KEY');
         if (storedKey) {
             setApiKey(storedKey);
         }
+
+        const storedSampleStep = localStorage.getItem('IMG_PICKER_SAMPLE_STEP');
+        if (storedSampleStep) setSampleStep(parseInt(storedSampleStep));
+
+        const storedQuantFactor = localStorage.getItem('IMG_PICKER_QUANT_FACTOR');
+        if (storedQuantFactor) setQuantizationFactor(parseInt(storedQuantFactor));
+
+        const storedMinDist = localStorage.getItem('IMG_PICKER_MIN_DIST');
+        if (storedMinDist) setMinRedmeanDistance(parseInt(storedMinDist));
     }, [isOpen]);
 
     const handleSave = () => {
         localStorage.setItem('GEMINI_API_KEY', apiKey);
+        localStorage.setItem('IMG_PICKER_SAMPLE_STEP', sampleStep.toString());
+        localStorage.setItem('IMG_PICKER_QUANT_FACTOR', quantizationFactor.toString());
+        localStorage.setItem('IMG_PICKER_MIN_DIST', minRedmeanDistance.toString());
         onClose();
     };
 
@@ -32,19 +47,65 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, theme })
         transition-all duration-300 ease-out
     `;
 
+    const inputClass = `w-full px-4 py-2 rounded-lg outline-none border ${isDark ? 'bg-white/5 border-white/10 focus:border-indigo-500' : 'bg-black/5 border-black/10 focus:border-indigo-500'}`;
+
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/20 backdrop-blur-sm" onClick={onClose}>
             <div 
-                className={`w-full max-w-md p-6 ${glassPanelClass} transform transition-all scale-100 opacity-100`}
+                className={`w-full max-w-md p-6 ${glassPanelClass} transform transition-all scale-100 opacity-100 max-h-[85vh] overflow-y-auto`}
                 onClick={e => e.stopPropagation()}
             >
                 <h2 className="text-xl font-bold mb-4">Settings</h2>
                 
-                <div className="mb-6">
+                <div className="mb-6 space-y-4">
+                    <h3 className="text-sm font-bold uppercase tracking-wider opacity-60 mb-2">Image Color Picker</h3>
+                    
+                    <div>
+                        <label className="block text-sm font-medium mb-1 opacity-80">Sample Step (Performance vs Accuracy)</label>
+                        <div className="flex items-center gap-3">
+                             <input 
+                                type="range" min="1" max="50" step="1"
+                                className="flex-grow h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
+                                value={sampleStep}
+                                onChange={(e) => setSampleStep(parseInt(e.target.value))}
+                            />
+                            <span className="text-sm w-8 text-right">{sampleStep}</span>
+                        </div>
+                    </div>
+
+                    <div>
+                         <label className="block text-sm font-medium mb-1 opacity-80">Quantization Factor (Color Grouping)</label>
+                         <div className="flex items-center gap-3">
+                            <input 
+                                type="range" min="1" max="100" step="1"
+                                className="flex-grow h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
+                                value={quantizationFactor}
+                                onChange={(e) => setQuantizationFactor(parseInt(e.target.value))}
+                            />
+                            <span className="text-sm w-8 text-right">{quantizationFactor}</span>
+                         </div>
+                    </div>
+
+                    <div>
+                         <label className="block text-sm font-medium mb-1 opacity-80">Min Redmean Distance (Distinctness)</label>
+                         <div className="flex items-center gap-3">
+                            <input 
+                                type="range" min="1" max="200" step="1"
+                                className="flex-grow h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
+                                value={minRedmeanDistance}
+                                onChange={(e) => setMinRedmeanDistance(parseInt(e.target.value))}
+                            />
+                            <span className="text-sm w-8 text-right">{minRedmeanDistance}</span>
+                         </div>
+                    </div>
+                </div>
+
+                <div className="mb-6 border-t border-current/10 pt-4">
+                    <h3 className="text-sm font-bold uppercase tracking-wider opacity-60 mb-2">AI Configuration</h3>
                     <label className="block text-sm font-medium mb-2 opacity-70">GEMINI API KEY</label>
                     <input 
                         type="password" 
-                        className={`w-full px-4 py-2 rounded-lg outline-none border ${isDark ? 'bg-white/5 border-white/10 focus:border-indigo-500' : 'bg-black/5 border-black/10 focus:border-indigo-500'}`}
+                        className={inputClass}
                         placeholder="Enter your API key..."
                         value={apiKey}
                         onChange={(e) => setApiKey(e.target.value)}

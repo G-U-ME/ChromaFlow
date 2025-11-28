@@ -35,6 +35,20 @@ const ImageColorPicker: React.FC<ImageColorPickerProps> = ({ theme, onColorSelec
         }
     };
 
+    // Redmean color distance approximation
+    const redmeanColorDistance = (r1: number, g1: number, b1: number, r2: number, g2: number, b2: number) => {
+        const rBar = (r1 + r2) / 2;
+        const deltaR = r1 - r2;
+        const deltaG = g1 - g2;
+        const deltaB = b1 - b2;
+        
+        return Math.sqrt(
+            (2 + rBar / 256) * (deltaR * deltaR) + 
+            4 * (deltaG * deltaG) + 
+            (2 + (255 - rBar) / 256) * (deltaB * deltaB)
+        );
+    };
+
     const extractColors = (imageSrc: string) => {
         const img = new Image();
         img.crossOrigin = "Anonymous";
@@ -65,10 +79,13 @@ const ImageColorPicker: React.FC<ImageColorPickerProps> = ({ theme, onColorSelec
             
             const imageData = ctx.getImageData(0, 0, w, h).data;
             const pixelCount = w * h;
-            const sampleStep = 10; // Sample every 10th pixel
+            
+            // Retrieve settings from localStorage or defaults
+            const sampleStep = parseInt(localStorage.getItem('IMG_PICKER_SAMPLE_STEP') || '10');
+            const q = parseInt(localStorage.getItem('IMG_PICKER_QUANT_FACTOR') || '24');
+            const minDistance = parseInt(localStorage.getItem('IMG_PICKER_MIN_DIST') || '50');
             
             // Color Quantization & Histogram
-            // We'll use a simplified approach: standard quantization
             const colorMap: { [key: string]: { r: number, g: number, b: number, count: number } } = {};
             
             for (let i = 0; i < pixelCount * 4; i += 4 * sampleStep) {
@@ -79,15 +96,19 @@ const ImageColorPicker: React.FC<ImageColorPickerProps> = ({ theme, onColorSelec
                 
                 if (a < 128) continue; // Skip transparent
 
-                // Quantize to reduce color space (e.g., round to nearest 20)
-                const q = 24;
+                // Quantize
                 const qr = Math.round(r / q) * q;
                 const qg = Math.round(g / q) * q;
                 const qb = Math.round(b / q) * q;
                 
-                const key = `${qr},${qg},${qb}`;
+                // Clamp values to 0-255
+                const cr = Math.min(255, Math.max(0, qr));
+                const cg = Math.min(255, Math.max(0, qg));
+                const cb = Math.min(255, Math.max(0, qb));
+
+                const key = `${cr},${cg},${cb}`;
                 if (!colorMap[key]) {
-                    colorMap[key] = { r: qr, g: qg, b: qb, count: 0 };
+                    colorMap[key] = { r: cr, g: cg, b: cb, count: 0 };
                 }
                 colorMap[key].count++;
             }
@@ -95,26 +116,19 @@ const ImageColorPicker: React.FC<ImageColorPickerProps> = ({ theme, onColorSelec
             // Convert to array and sort
             const sortedColors = Object.values(colorMap).sort((a, b) => b.count - a.count);
             
-            // Select distinct colors
+            // Select distinct colors using Redmean distance
             const distinctColors: string[] = [];
-            const minDistance = 30; // Minimum Euclidean distance to be considered distinct
             
             for (const c of sortedColors) {
                 if (distinctColors.length >= 7) break;
                 
                 const isDistinct = distinctColors.every(existingHex => {
-                    // Convert back to RGB to check dist
-                    // We could store RGB in distinctColors to avoid re-parsing, but list is small
                     const bigint = parseInt(existingHex.slice(1), 16);
                     const er = (bigint >> 16) & 255;
                     const eg = (bigint >> 8) & 255;
                     const eb = bigint & 255;
                     
-                    const dist = Math.sqrt(
-                        Math.pow(c.r - er, 2) + 
-                        Math.pow(c.g - eg, 2) + 
-                        Math.pow(c.b - eb, 2)
-                    );
+                    const dist = redmeanColorDistance(c.r, c.g, c.b, er, eg, eb);
                     return dist > minDistance;
                 });
 
