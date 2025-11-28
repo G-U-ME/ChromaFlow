@@ -595,13 +595,12 @@ const GridCanvas: React.FC<GridCanvasProps> = ({
           <div 
             className="absolute left-4 bottom-[7.5rem] sm:left-6 sm:bottom-[6.5rem] z-30 flex flex-col items-start pointer-events-none"
           >
-             {/* Glass Background Strip - Static Width */}
-             <div className={`absolute top-0 left-0 bottom-0 w-[2.5rem] sm:w-[3rem] rounded-[2rem] ${glassPanelClass} pointer-events-auto`} />
-
-             {/* Scroll Container - Expands on Hover to avoid clipping children */}
+             {/* Scroll Container - Now also handles the capsule shape and background */}
              <div 
                 ref={savedColorsListRef}
-                className="relative max-h-[35vh] sm:max-h-[50vh] overflow-y-auto overflow-x-visible flex flex-col-reverse items-start py-2 pl-[0.5rem] w-[2.5rem] sm:w-[3rem] scrollbar-hide transition-[width] duration-200 ease-out pointer-events-auto"
+                className={`relative max-h-[35vh] sm:max-h-[50vh] overflow-y-auto flex flex-col-reverse items-start py-2 pl-[0.5rem] w-[2.5rem] sm:w-[3rem] scrollbar-hide transition-[width] duration-200 ease-out pointer-events-auto rounded-[2rem] ${glassPanelClass}
+                    ${hoveredColorId ? 'overflow-x-visible' : 'overflow-x-hidden'}
+                `}
                 style={{ 
                     width: hoveredColorId ? '16rem' : undefined, // Expand to fit overlay
                     scrollbarWidth: 'none'
