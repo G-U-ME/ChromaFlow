@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { Theme, HSL } from '../types';
 import { RGBToHSL, RGBToHex } from '../utils';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface ImageColorPickerProps {
     theme: Theme;
@@ -186,25 +187,26 @@ const ImageColorPicker: React.FC<ImageColorPickerProps> = ({ theme, onColorSelec
             )}
 
             {/* Main Capsule */}
-            <div 
-                className={`pointer-events-auto flex items-center ${glassPanelClass} rounded-full h-10 sm:h-14 transition-all duration-500 overflow-hidden
+            <motion.div 
+                layout
+                className={`pointer-events-auto flex items-center ${glassPanelClass} rounded-full h-10 sm:h-14 overflow-hidden
                             ${showResult ? 'pl-2 pr-2' : 'w-10 sm:w-14 justify-center hover:scale-105 cursor-pointer'}`}
                 onClick={(e) => {
                     if (!showResult) handleButtonClick();
                 }}
-                style={{
-                    width: showResult 
-                        ? `${50 + colors.length * 40}px` // Dynamic width
-                        : undefined
-                }}
+                transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
             >
                 {loading ? (
-                     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-current opacity-50" />
+                     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-current opacity-50 mx-auto" />
                 ) : showResult ? (
-                    <div className="flex items-center h-full">
+                    <motion.div 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="flex items-center h-full whitespace-nowrap"
+                    >
                         {/* Close/Reset Button on Left */}
                         <button 
-                            className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-full hover:bg-black/10 dark:hover:bg-white/10 mr-1"
+                            className="w-8 h-8 sm:w-10 sm:h-10 flex-shrink-0 flex items-center justify-center rounded-full hover:bg-black/10 dark:hover:bg-white/10 mr-1"
                             onClick={(e) => {
                                 e.stopPropagation();
                                 handleButtonClick(); // Resets
@@ -218,9 +220,12 @@ const ImageColorPicker: React.FC<ImageColorPickerProps> = ({ theme, onColorSelec
                         {/* Colors */}
                         <div className="flex items-center gap-1 sm:gap-2">
                             {colors.map((c, i) => (
-                                <button
+                                <motion.button
                                     key={i}
-                                    className="w-6 h-6 sm:w-8 sm:h-8 rounded-full border border-white/20 shadow-sm hover:scale-110 transition-transform"
+                                    initial={{ scale: 0 }}
+                                    animate={{ scale: 1 }}
+                                    transition={{ delay: i * 0.05 }}
+                                    className="w-6 h-6 sm:w-8 sm:h-8 rounded-full border border-white/20 shadow-sm hover:scale-110 flex-shrink-0"
                                     style={{ backgroundColor: c }}
                                     onClick={(e) => {
                                         e.stopPropagation();
@@ -230,16 +235,19 @@ const ImageColorPicker: React.FC<ImageColorPickerProps> = ({ theme, onColorSelec
                                 />
                             ))}
                         </div>
-                    </div>
+                    </motion.div>
                 ) : (
                     /* Upload Icon */
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <motion.svg 
+                        layoutId="upload-icon"
+                        width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                    >
                         <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
                         <circle cx="8.5" cy="8.5" r="1.5"></circle>
                         <polyline points="21 15 16 10 5 21"></polyline>
-                    </svg>
+                    </motion.svg>
                 )}
-            </div>
+            </motion.div>
         </div>
     );
 };
