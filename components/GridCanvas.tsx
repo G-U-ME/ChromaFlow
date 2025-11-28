@@ -594,7 +594,7 @@ const GridCanvas: React.FC<GridCanvasProps> = ({
       {/* SAVED COLORS LIST */}
       {savedColors.length > 0 && (
           <div 
-            className="absolute left-4 bottom-[7.5rem] sm:left-6 sm:bottom-[6.5rem] z-30 flex flex-col items-start pointer-events-none"
+            className="absolute left-4 bottom-[11rem] sm:left-6 sm:bottom-[11rem] z-30 flex flex-col items-start pointer-events-none"
           >
              {/* Scroll Container - Now also handles the capsule shape and background */}
              <motion.div 

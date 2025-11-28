@@ -5,6 +5,7 @@ import ColorWheel from './ColorWheel';
 import SearchBar from './SearchBar';
 import SettingsModal from './SettingsModal';
 import AISearch from './AISearch';
+import ImageColorPicker from './ImageColorPicker';
 
 interface FloatingUIProps {
     viewState: ViewState;
@@ -73,6 +74,12 @@ const FloatingUI: React.FC<FloatingUIProps> = ({
                     theme={theme}
                 />
             </div>
+
+            {/* Bottom Left (Above Search): Image Color Picker */}
+            <ImageColorPicker 
+                theme={theme}
+                onColorSelect={onColorChange}
+            />
 
             {/* Bottom Center: AI Search */}
             <div className="pointer-events-auto">
