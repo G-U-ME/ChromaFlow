@@ -206,7 +206,7 @@ const AISearch: React.FC<AISearchProps> = ({ theme, onColorSelect, openSettings 
                                     {generatedColors.map((color, idx) => (
                                         <button
                                             key={idx}
-                                            className="w-8 h-8 rounded-full border-2 border-white/20 shadow-sm hover:scale-110 transition-transform focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                            className="w-6 h-6 sm:w-8 sm:h-8 rounded-full border-2 border-white/20 shadow-sm hover:scale-110 transition-transform focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                                             style={{ backgroundColor: color }}
                                             onClick={() => handleColorClick(color)}
                                             title={color}
