@@ -9,10 +9,14 @@ interface SettingsModalProps {
 
 const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, theme }) => {
     const [apiKey, setApiKey] = useState('');
-    const [sampleStep, setSampleStep] = useState(10);
-    const [quantizationFactor, setQuantizationFactor] = useState(24);
-    const [minRedmeanDistance, setMinRedmeanDistance] = useState(50);
+    const [sampleStep, setSampleStep] = useState(16);
+    const [quantizationFactor, setQuantizationFactor] = useState(10);
+    const [minRedmeanDistance, setMinRedmeanDistance] = useState(45);
     
+    const DEFAULT_SAMPLE_STEP = 16;
+    const DEFAULT_QUANT_FACTOR = 10;
+    const DEFAULT_MIN_DIST = 45;
+
     useEffect(() => {
         const storedKey = localStorage.getItem('GEMINI_API_KEY');
         if (storedKey) {
@@ -48,6 +52,39 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, theme })
     `;
 
     const inputClass = `w-full px-4 py-2 rounded-lg outline-none border ${isDark ? 'bg-white/5 border-white/10 focus:border-indigo-500' : 'bg-black/5 border-black/10 focus:border-indigo-500'}`;
+    
+    // Helper to render slider with default marker
+    const renderSlider = (
+        value: number, 
+        setValue: (val: number) => void, 
+        min: number, 
+        max: number, 
+        defaultValue: number
+    ) => {
+        const percent = ((defaultValue - min) / (max - min)) * 100;
+        return (
+            <div className="flex items-center gap-3">
+                <div className="relative flex-grow h-6 flex items-center">
+                    <input 
+                        type="range" min={min} max={max} step="1"
+                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700 z-10 relative bg-transparent"
+                        style={{
+                            background: `linear-gradient(to right, ${isDark ? '#4f46e5' : '#6366f1'} 0%, ${isDark ? '#374151' : '#e5e7eb'} 0%)`
+                        }}
+                        value={value}
+                        onChange={(e) => setValue(parseInt(e.target.value))}
+                    />
+                    {/* Default Marker */}
+                    <div 
+                        className="absolute top-1/2 -translate-y-1/2 w-0.5 h-4 bg-red-500/50 pointer-events-none z-0"
+                        style={{ left: `${percent}%` }}
+                        title={`Default: ${defaultValue}`}
+                    />
+                </div>
+                <span className="text-sm w-8 text-right">{value}</span>
+            </div>
+        );
+    };
 
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/20 backdrop-blur-sm" onClick={onClose}>
@@ -61,42 +98,18 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, theme })
                     <h3 className="text-sm font-bold uppercase tracking-wider opacity-60 mb-2">Image Color Picker</h3>
                     
                     <div>
-                        <label className="block text-sm font-medium mb-1 opacity-80">Sample Step (Performance vs Accuracy)</label>
-                        <div className="flex items-center gap-3">
-                             <input 
-                                type="range" min="1" max="50" step="1"
-                                className="flex-grow h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
-                                value={sampleStep}
-                                onChange={(e) => setSampleStep(parseInt(e.target.value))}
-                            />
-                            <span className="text-sm w-8 text-right">{sampleStep}</span>
-                        </div>
+                        <label className="block text-sm font-medium mb-1 opacity-80">Sample Step (Performance)</label>
+                        {renderSlider(sampleStep, setSampleStep, 1, 50, DEFAULT_SAMPLE_STEP)}
                     </div>
 
                     <div>
-                         <label className="block text-sm font-medium mb-1 opacity-80">Quantization Factor (Color Grouping)</label>
-                         <div className="flex items-center gap-3">
-                            <input 
-                                type="range" min="1" max="100" step="1"
-                                className="flex-grow h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
-                                value={quantizationFactor}
-                                onChange={(e) => setQuantizationFactor(parseInt(e.target.value))}
-                            />
-                            <span className="text-sm w-8 text-right">{quantizationFactor}</span>
-                         </div>
+                         <label className="block text-sm font-medium mb-1 opacity-80">Quantization Factor (Grouping)</label>
+                         {renderSlider(quantizationFactor, setQuantizationFactor, 1, 100, DEFAULT_QUANT_FACTOR)}
                     </div>
 
                     <div>
                          <label className="block text-sm font-medium mb-1 opacity-80">Min Redmean Distance (Distinctness)</label>
-                         <div className="flex items-center gap-3">
-                            <input 
-                                type="range" min="1" max="200" step="1"
-                                className="flex-grow h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
-                                value={minRedmeanDistance}
-                                onChange={(e) => setMinRedmeanDistance(parseInt(e.target.value))}
-                            />
-                            <span className="text-sm w-8 text-right">{minRedmeanDistance}</span>
-                         </div>
+                         {renderSlider(minRedmeanDistance, setMinRedmeanDistance, 1, 200, DEFAULT_MIN_DIST)}
                     </div>
                 </div>
 

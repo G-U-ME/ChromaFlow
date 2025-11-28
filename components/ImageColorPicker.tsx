@@ -81,9 +81,9 @@ const ImageColorPicker: React.FC<ImageColorPickerProps> = ({ theme, onColorSelec
             const pixelCount = w * h;
             
             // Retrieve settings from localStorage or defaults
-            const sampleStep = parseInt(localStorage.getItem('IMG_PICKER_SAMPLE_STEP') || '10');
-            const q = parseInt(localStorage.getItem('IMG_PICKER_QUANT_FACTOR') || '24');
-            const minDistance = parseInt(localStorage.getItem('IMG_PICKER_MIN_DIST') || '50');
+            const sampleStep = parseInt(localStorage.getItem('IMG_PICKER_SAMPLE_STEP') || '16');
+            const q = parseInt(localStorage.getItem('IMG_PICKER_QUANT_FACTOR') || '10');
+            const minDistance = parseInt(localStorage.getItem('IMG_PICKER_MIN_DIST') || '45');
             
             // Color Quantization & Histogram
             const colorMap: { [key: string]: { r: number, g: number, b: number, count: number } } = {};
