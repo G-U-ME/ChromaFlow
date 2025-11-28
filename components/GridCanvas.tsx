@@ -603,7 +603,7 @@ const GridCanvas: React.FC<GridCanvasProps> = ({
                 animate={{ 
                     width: isListHovered ? 'auto' : (viewportSize.w < 640 ? '2.5rem' : '3rem')
                 }}
-                className={`relative max-h-[35vh] sm:max-h-[50vh] overflow-y-auto flex flex-col-reverse items-start py-2 pl-[0.5rem] scrollbar-hide pointer-events-auto rounded-[2rem] ${glassPanelClass} overflow-x-hidden`}
+                className={`relative max-h-[35vh] sm:max-h-[50vh] overflow-y-auto flex flex-col-reverse items-center py-2 px-2 scrollbar-hide pointer-events-auto rounded-[2rem] ${glassPanelClass} overflow-x-hidden`}
                 style={{ 
                     scrollbarWidth: 'none'
                 }}
