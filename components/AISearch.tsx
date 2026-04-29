@@ -47,7 +47,7 @@ const AISearch: React.FC<AISearchProps> = ({ theme, onColorSelect, openSettings 
             // Using gemini-1.5-flash as a safe default if the user-specified model 'gemini-3-pro-preview' fails or doesn't exist.
             // However, strictly following the user request to use 'gemini-3-pro-preview'.
             // Note: If this model doesn't exist, this will fail.
-            const modelName = 'gemini-3-pro-preview'; 
+            const modelName = 'gemini-3.1-pro-preview'; 
             
             const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`, {
                 method: 'POST',
